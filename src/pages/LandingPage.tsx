@@ -102,7 +102,7 @@ export default function LandingPage() {
                                 <div className="w-3 h-3 rounded-full bg-green-500/50" />
                             </div>
                             <img
-                                src="./landingPageImg.png"
+                                src="/landingPageImg.png"
                                 alt="Dashboard Interface"
                                 className="w-full h-auto opacity-90"
                             />
