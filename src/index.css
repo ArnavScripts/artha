@@ -1,0 +1,950 @@
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ============================================
+       LIGHT MODE - "CORPORATE AUDIT" THEME
+       Clean, spacious, paper-like, high-contrast
+       ============================================ */
+
+    /* Core Surfaces */
+    --background: 210 40% 98%;
+    /* #F8FAFC - Slate 50 */
+    --foreground: 222 47% 11%;
+    /* #0B1120 - Obsidian Blue (Text) */
+
+    --card: 0 0% 100%;
+    /* White */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary Actions */
+    --primary: 222 47% 11%;
+    /* Dark Blue for primary actions */
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary Elements */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted/Subtle */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Borders & Inputs */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222 47% 11%;
+
+    --radius: 0.625rem;
+
+    /* ============================================
+       ARTHA BRAND TOKENS
+       ============================================ */
+
+    /* Artha Core */
+    --artha-ceramic: 0 72% 51%;
+    --artha-ceramic-light: 0 72% 95%;
+    --artha-steel: 215 25% 34%;
+    --artha-steel-light: 215 25% 96%;
+    --artha-vedic: 160 84% 39%;
+    --artha-vedic-light: 160 84% 95%;
+    --artha-gold: 43 96% 56%;
+    /* Digital Gold - Amber-500 #F59E0B */
+    --artha-gold-light: 43 96% 95%;
+    --artha-gold-hover: 43 96% 47%;
+    /* Darker hover - #D97706 */
+    --artha-gold-glow: 45 93% 58%;
+    /* Glow text - Amber-400 #FBBF24 */
+
+    /* Carbon Mode - Light Theme Accents (Darker for readability) */
+    --carbon-risk: 0 84% 40%;
+    /* Crimson - darker red for light bg */
+    --carbon-risk-light: 0 72% 95%;
+    --carbon-success: 160 84% 32%;
+    /* Forest - darker green */
+    --carbon-success-light: 160 84% 95%;
+    --carbon-warning: 43 96% 47%;
+    /* Digital Gold - darker for light mode */
+    --carbon-warning-light: 43 96% 95%;
+    --carbon-slate: 215 25% 34%;
+    --carbon-slate-light: 215 25% 96%;
+    --carbon-tech: 199 89% 48%;
+    /* Electric Sky - sky-400 */
+    --carbon-tech-light: 199 89% 95%;
+
+    /* Green Mode - Light Theme Accents */
+    --green-primary: 160 84% 32%;
+    /* Forest Emerald - darker */
+    --green-primary-light: 160 84% 95%;
+    --green-accent: 160 76% 28%;
+    --green-accent-light: 160 76% 95%;
+    --green-earth: 25 38% 40%;
+    --green-earth-light: 35 50% 96%;
+    --green-sage: 160 40% 50%;
+    --green-forest: 160 55% 22%;
+    --green-solar: 43 96% 47%;
+    /* Digital Gold */
+    --green-solar-light: 43 96% 95%;
+
+    /* Glassmorphism - Light */
+    --glass-background: 0 0% 100% / 0.85;
+    --glass-border: 215 25% 85% / 0.5;
+    --glass-shadow: 222 47% 11% / 0.06;
+
+    /* Gradients - Light Mode */
+    --gradient-artha: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(215 25% 20%) 100%);
+    --gradient-carbon: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(215 25% 27%) 100%);
+    --gradient-green: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(160 76% 36%) 100%);
+    --gradient-risk: linear-gradient(135deg, hsl(0 72% 51%) 0%, hsl(0 72% 45%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.95) 0%, hsl(0 0% 100% / 0.7) 100%);
+    --gradient-dark-card: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(215 35% 18%) 100%);
+    --gradient-sage: linear-gradient(135deg, hsl(270 60% 55%) 0%, hsl(280 60% 45%) 100%);
+
+    /* Shadows - Light Mode (Subtle) */
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.06), 0 2px 4px -2px hsl(222 47% 11% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.08), 0 4px 6px -4px hsl(222 47% 11% / 0.04);
+    --shadow-xl: 0 20px 25px -5px hsl(222 47% 11% / 0.1), 0 8px 10px -6px hsl(222 47% 11% / 0.06);
+    --shadow-glow-green: 0 0 20px hsl(160 84% 39% / 0.2);
+    --shadow-glow-sage: 0 0 20px hsl(270 60% 55% / 0.2), 0 0 40px hsl(280 60% 45% / 0.1);
+
+    /* Sidebar - Light (Glassmorphic) */
+    --sidebar-background: 0 0% 100% / 0.95;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 222 47% 11%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 215 25% 92%;
+    --sidebar-ring: 222 47% 11%;
+  }
+
+  .dark {
+    /* ============================================
+       DARK MODE - "MIDNIGHT TERMINAL" THEME
+       Neon data, glowing accents, depth
+       ============================================ */
+
+    /* Core Surfaces - Higher contrast cards */
+    --background: 222 50% 7%;
+    /* #0B1120 - Obsidian Blue */
+    --foreground: 210 40% 98%;
+    /* White */
+
+    --card: 217 33% 15%;
+    /* Elevated surface - more visible #1E293B/50 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary Actions */
+    --primary: 210 40% 98%;
+    /* Light for dark bg */
+    --primary-foreground: 222 47% 11%;
+
+    /* Secondary Elements */
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted/Subtle */
+    --muted: 217 33% 16%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Accent */
+    --accent: 217 33% 20%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Destructive */
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Borders & Inputs - Inset look */
+    --border: 217 33% 22%;
+    /* Subtle but visible */
+    --input: 217 40% 12%;
+    /* Inset background for inputs */
+    --ring: 213 27% 84%;
+
+    /* Carbon Mode - Dark Theme Accents (Brighter/Neon for glow) */
+    --carbon-risk: 0 90% 62%;
+    /* Neon Rose */
+    --carbon-risk-light: 0 72% 20%;
+    --carbon-success: 160 84% 55%;
+    /* Neon Emerald */
+    --carbon-success-light: 160 84% 15%;
+    --carbon-warning: 43 96% 56%;
+    /* Digital Gold - bright */
+    --carbon-warning-light: 43 96% 18%;
+    --carbon-slate: 215 25% 60%;
+    --carbon-slate-light: 215 25% 18%;
+    --carbon-tech: 199 89% 60%;
+    /* Electric Sky - brighter for dark mode */
+    --carbon-tech-light: 199 89% 15%;
+
+    /* Green Mode - Dark Theme Accents (Neon) */
+    --green-primary: 160 84% 50%;
+    /* Neon Emerald */
+    --green-primary-light: 160 84% 15%;
+    --green-accent: 160 76% 45%;
+    --green-accent-light: 160 76% 15%;
+    --green-earth: 25 38% 55%;
+    --green-earth-light: 35 50% 15%;
+    --green-sage: 160 40% 65%;
+    --green-forest: 160 55% 40%;
+    --green-solar: 45 93% 58%;
+    /* Neon Gold - Glow */
+    --green-solar-light: 43 96% 18%;
+
+    /* Artha Gold - Dark Mode (Brighter for glow) */
+    --artha-gold: 43 96% 56%;
+    /* Digital Gold */
+    --artha-gold-hover: 43 96% 50%;
+    --artha-gold-glow: 45 93% 62%;
+    /* Bright glow text */
+
+    /* Glassmorphism - Dark */
+    --glass-background: 222 47% 12% / 0.85;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-shadow: 0 0% 0% / 0.4;
+
+    /* Gradients - Dark Mode */
+    --gradient-glass: linear-gradient(135deg, hsl(222 47% 12% / 0.9) 0%, hsl(222 47% 8% / 0.7) 100%);
+    --gradient-dark-card: linear-gradient(135deg, hsl(222 47% 10%) 0%, hsl(222 47% 14%) 100%);
+
+    /* Shadows - Dark Mode (Glowing) */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.3);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.5), 0 8px 10px -6px hsl(0 0% 0% / 0.4);
+    --shadow-glow-green: 0 0 30px hsl(160 84% 50% / 0.4), 0 0 60px hsl(160 84% 50% / 0.2);
+    --shadow-glow-sage: 0 0 30px hsl(270 60% 55% / 0.4), 0 0 60px hsl(280 60% 45% / 0.25);
+
+    /* Sidebar - Dark (Glassmorphic) */
+    --sidebar-background: 222 47% 8% / 0.95;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217 33% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 16%;
+    --sidebar-ring: 213 27% 84%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply h-full;
+  }
+
+  body {
+    @apply h-full bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    transition: background-color 0.5s ease, color 0.3s ease;
+  }
+
+  #root {
+    @apply h-full;
+  }
+
+  /* ARTHA Typography System */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  /* Monospace for financial data */
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Heading font utility */
+  .font-heading {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  /* ============================================
+     GLOBAL SCROLLBAR - Dark Void Aesthetic
+     ============================================ */
+
+  /* Global scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .dark ::-webkit-scrollbar-track,
+  :root.dark ::-webkit-scrollbar-track {
+    background: #0B1120;
+    /* Matches void background */
+  }
+
+  .dark ::-webkit-scrollbar-thumb,
+  :root.dark ::-webkit-scrollbar-thumb {
+    background: #334155;
+    /* Dark Slate */
+    border-radius: 10px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover,
+  :root.dark ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+
+  /* Custom scrollbar class (for elements that need explicit scrollbar styling) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: #0B1120;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+}
+
+@layer utilities {
+  /* ============================================
+     GLASSMORPHISM UTILITIES
+     ============================================ */
+
+  .glass {
+    @apply backdrop-blur-xl border;
+    background: hsl(var(--glass-background));
+    border-color: hsl(var(--glass-border));
+    box-shadow: var(--shadow-md);
+  }
+
+  .glass-dark {
+    @apply backdrop-blur-xl border border-white/10;
+    background: linear-gradient(135deg, hsl(222 47% 11% / 0.9) 0%, hsl(215 35% 18% / 0.9) 100%);
+  }
+
+  /* Adaptive Glass Panel */
+  .glass-panel {
+    background: hsl(var(--card) / 0.8);
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .dark .glass-panel {
+    @apply border-white/5;
+    background: linear-gradient(135deg, hsl(222 47% 11% / 0.6) 0%, hsl(215 35% 18% / 0.6) 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  /* ============================================
+     ARTHA CARD STYLES
+     ============================================ */
+
+  .artha-card {
+    @apply bg-card rounded-xl border border-border;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .artha-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .artha-card-dark {
+    @apply rounded-xl text-white mica-texture;
+    background: var(--gradient-dark-card);
+  }
+
+  /* Mica Texture for premium feel */
+  .mica-texture {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mica-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+  }
+
+  .dark .mica-texture::before {
+    opacity: 0.04;
+  }
+
+  .mica-texture>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Legacy support - Enhanced card with sapphire glass border in dark mode */
+  .carbon-card {
+    @apply rounded-xl border transition-all duration-300;
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .carbon-card:hover {
+    box-shadow: var(--shadow-md);
+    @apply translate-y-[-2px];
+  }
+
+  .dark .carbon-card {
+    background: linear-gradient(135deg, hsl(222 47% 10% / 0.9) 0%, hsl(217 33% 13% / 0.85) 100%);
+    border-color: hsl(199 89% 48% / 0.08);
+    /* Sky-400 sapphire tint */
+    backdrop-filter: blur(20px);
+  }
+
+  .dark .carbon-card:hover {
+    border-color: hsl(199 89% 48% / 0.15);
+    /* Brighter sapphire on hover */
+    box-shadow: var(--shadow-md), 0 0 20px hsl(199 89% 48% / 0.05);
+  }
+
+  .carbon-card-dark {
+    @apply rounded-xl text-white mica-texture;
+    background: var(--gradient-dark-card);
+    border: 1px solid hsl(199 89% 48% / 0.1);
+    /* Sapphire glass border */
+  }
+
+  .dark .carbon-card-dark {
+    box-shadow: 0 0 30px hsl(199 89% 48% / 0.05);
+  }
+
+  /* Green Mode Card Styles - Synced with Carbon Glass aesthetic */
+  .green-card {
+    @apply rounded-xl border transition-all duration-300;
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .green-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .dark .green-card {
+    background: linear-gradient(135deg, hsl(222 47% 10% / 0.9) 0%, hsl(217 33% 13% / 0.85) 100%);
+    border-color: hsl(199 89% 48% / 0.08);
+    /* Sky-400 sapphire tint */
+    backdrop-filter: blur(20px);
+  }
+
+  .dark .green-card:hover {
+    border-color: hsl(199 89% 48% / 0.15);
+    box-shadow: var(--shadow-md), 0 0 20px hsl(199 89% 48% / 0.05);
+  }
+
+  /* ============================================
+     SIDEBAR GLASS SHINE EFFECT
+     Traveling gradient that moves on hover
+     ============================================ */
+
+
+  /* ============================================
+     AI / SAGE EFFECTS
+     ============================================ */
+
+  .sage-glow {
+    box-shadow: var(--shadow-glow-sage);
+  }
+
+  .ai-glow {
+    box-shadow: var(--shadow-glow-sage);
+  }
+
+  /* Risk Indicator - Theme Adaptive */
+  .risk-indicator {
+    color: hsl(var(--carbon-risk));
+  }
+
+  /* Success Indicator - Theme Adaptive */
+  .success-indicator {
+    color: hsl(var(--carbon-success));
+  }
+
+  /* ============================================
+     SPECIALTY COMPONENTS
+     ============================================ */
+
+  /* Digital Gold Button - Premium Amex-style */
+  .btn-gold {
+    @apply font-heading font-semibold px-6 py-3 rounded-lg transition-all duration-300;
+    background: hsl(var(--artha-gold));
+    color: hsl(222 47% 11%);
+    /* Black text - CRITICAL for readability */
+    border: 1px solid hsl(var(--artha-gold-hover) / 0.3);
+  }
+
+  .btn-gold:hover {
+    background: hsl(var(--artha-gold-hover));
+    box-shadow: 0 4px 15px hsl(var(--artha-gold) / 0.3);
+  }
+
+  .dark .btn-gold {
+    box-shadow: 0 0 20px hsl(var(--artha-gold) / 0.3);
+    color: hsl(222 47% 8%);
+    /* Even darker in dark mode */
+  }
+
+  .dark .btn-gold:hover {
+    box-shadow: 0 0 30px hsl(var(--artha-gold) / 0.5), 0 4px 20px hsl(var(--artha-gold) / 0.3);
+  }
+
+  /* Gold Text for glow effects */
+  .text-gold {
+    color: hsl(var(--artha-gold));
+  }
+
+  .dark .text-gold {
+    color: hsl(var(--artha-gold-glow));
+    text-shadow: 0 0 10px hsl(var(--artha-gold) / 0.5);
+  }
+
+  /* Gold Progress Bar */
+  .progress-gold {
+    @apply rounded-full overflow-hidden;
+    background: hsl(var(--artha-gold) / 0.2);
+  }
+
+  .progress-gold>* {
+    background: hsl(var(--artha-gold));
+  }
+
+  .dark .progress-gold {
+    background: hsl(var(--artha-gold) / 0.15);
+    box-shadow: 0 0 10px hsl(var(--artha-gold) / 0.2);
+  }
+
+  .dark .progress-gold>* {
+    box-shadow: 0 0 8px hsl(var(--artha-gold) / 0.6);
+  }
+
+  /* Trade Ticket Style */
+  .trade-ticket {
+    @apply rounded-lg border-2 border-dashed p-4;
+    background: hsl(45 100% 97%);
+    border-color: hsl(var(--artha-gold) / 0.5);
+  }
+
+  .dark .trade-ticket {
+    background: hsl(43 30% 10%);
+    border-color: hsl(var(--artha-gold) / 0.4);
+    box-shadow: inset 0 0 20px hsl(var(--artha-gold) / 0.05);
+  }
+
+  /* Terminal Style */
+  .terminal-row {
+    @apply font-mono text-sm py-1.5 px-3 border-b border-border/50;
+  }
+
+  /* Regulatory Hub - "Digital Vault" in dark, "Government Form" in light */
+  .regulatory-card {
+    @apply bg-card rounded-xl border-2 p-6 transition-all duration-300;
+    border-color: hsl(var(--border));
+  }
+
+  .dark .regulatory-card {
+    background: hsl(222 47% 10%);
+    border-color: hsl(var(--carbon-tech) / 0.35);
+    box-shadow: 0 0 30px hsl(var(--carbon-tech) / 0.12), inset 0 0 60px hsl(var(--carbon-tech) / 0.04);
+  }
+
+  /* Contour Map Pattern for Green Mode */
+  .contour-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5C16.2 5 5 16.2 5 30s11.2 25 25 25 25-11.2 25-25S43.8 5 30 5zm0 40c-8.3 0-15-6.7-15-15s6.7-15 15-15 15 6.7 15 15-6.7 15-15 15z' fill='%23059669' fill-opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  /* ============================================
+     TRANSITIONS & ANIMATIONS
+     ============================================ */
+
+  /* Smooth workspace/theme transitions */
+  .workspace-transition {
+    @apply transition-all duration-500 ease-out;
+  }
+
+  .theme-transition {
+    transition: background-color 0.5s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Pulse Animation for Authorize Button */
+  @keyframes slow-pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-slow-pulse {
+    animation: slow-pulse 2s ease-in-out infinite;
+  }
+
+  /* AI Float Animation */
+  @keyframes ai-float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  .animate-ai-float {
+    animation: ai-float 3s ease-in-out infinite;
+  }
+
+  /* SAGE Breathing Glow */
+  @keyframes sage-breathe {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px hsl(270 60% 55% / 0.3), 0 0 40px hsl(280 60% 45% / 0.15);
+    }
+
+    50% {
+      box-shadow: 0 0 35px hsl(270 60% 55% / 0.5), 0 0 70px hsl(280 60% 45% / 0.3);
+    }
+  }
+
+  .animate-sage-breathe {
+    animation: sage-breathe 3s ease-in-out infinite;
+  }
+
+  /* Legacy AI Breathing */
+  .animate-ai-breathe {
+    animation: sage-breathe 3s ease-in-out infinite;
+  }
+
+  /* ============================================
+     CHART INTERACTIVITY
+     ============================================ */
+
+  .chart-interactive .recharts-bar-rectangle {
+    transition: opacity 0.2s ease-out;
+  }
+
+  .chart-interactive:hover .recharts-bar-rectangle {
+    opacity: 0.4;
+  }
+
+  .chart-interactive .recharts-bar-rectangle:hover {
+    opacity: 1 !important;
+  }
+
+  /* ============================================
+      INTELLIGENCE MODULE
+      ============================================ */
+
+  .intelligence-container {
+    @apply rounded-2xl border mica-texture;
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--secondary)) 100%);
+    border-color: hsl(var(--border));
+  }
+
+  .dark .intelligence-container {
+    background: linear-gradient(135deg, hsl(222 47% 8%) 0%, hsl(222 47% 12%) 100%);
+    border-color: hsl(0 0% 100% / 0.1);
+  }
+
+  /* Adaptive Chart Container - Glass in light, Glass-dark in dark mode */
+  .chart-container {
+    @apply rounded-2xl border shadow-lg mica-texture p-6 transition-all duration-300;
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
+  }
+
+  .dark .chart-container {
+    background: linear-gradient(135deg, hsl(217 33% 15% / 0.8) 0%, hsl(217 33% 18% / 0.6) 100%);
+    border-color: hsl(0 0% 100% / 0.1);
+  }
+
+  /* Adaptive Chart Card - Clean in light, dark glass in dark */
+  .adaptive-chart-card {
+    @apply rounded-2xl border shadow-sm mica-texture transition-all duration-300;
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
+  }
+
+  .dark .adaptive-chart-card {
+    background: linear-gradient(135deg, hsl(222 47% 10% / 0.9) 0%, hsl(217 33% 15% / 0.8) 100%);
+    border-color: hsl(0 0% 100% / 0.1);
+  }
+
+  /* "Dark Island" Pattern - Charts stay dark in light mode for neon visibility */
+  .dark-island {
+    @apply rounded-2xl border shadow-xl mica-texture;
+    background: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(215 35% 18%) 100%);
+    border-color: hsl(0 0% 100% / 0.1);
+    color: white;
+  }
+
+  /* ============================================
+     GRADIENT TEXT
+     ============================================ */
+
+  .gradient-text-artha {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-artha);
+  }
+
+  .gradient-text-carbon {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-carbon);
+  }
+
+  .gradient-text-green {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-green);
+  }
+
+  /* ARTHA Logo Tracking */
+  .artha-logo {
+    letter-spacing: 0.2em;
+  }
+
+  /* ============================================
+     NEON EFFECTS (Dark Mode Only)
+     ============================================ */
+
+  .dark .neon-border-risk {
+    box-shadow: 0 0 10px hsl(var(--carbon-risk) / 0.3), inset 0 0 20px hsl(var(--carbon-risk) / 0.05);
+    border-color: hsl(var(--carbon-risk) / 0.5);
+  }
+
+  .dark .neon-border-success {
+    box-shadow: 0 0 10px hsl(var(--carbon-success) / 0.3), inset 0 0 20px hsl(var(--carbon-success) / 0.05);
+    border-color: hsl(var(--carbon-success) / 0.5);
+  }
+
+  .dark .neon-border-tech {
+    box-shadow: 0 0 10px hsl(var(--carbon-tech) / 0.3), inset 0 0 20px hsl(var(--carbon-tech) / 0.05);
+    border-color: hsl(var(--carbon-tech) / 0.5);
+  }
+
+  .dark .neon-text {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+
+  /* ============================================
+     TRANSPARENT SEVERITY PILLS
+     Use bg-xxx/10 with text-xxx for glass-like pills
+     ============================================ */
+
+  /* Neon Glass Pills - Premium severity indicators */
+  .pill-risk {
+    @apply px-3 py-1 rounded-full text-xs uppercase tracking-wider font-medium;
+    background: hsl(0 90% 55% / 0.1);
+    color: hsl(0 90% 62%);
+    border: 1px solid hsl(0 90% 55% / 0.2);
+  }
+
+  .dark .pill-risk {
+    background: hsl(0 90% 62% / 0.1);
+    color: hsl(0 90% 62%);
+    border: 1px solid hsl(0 90% 62% / 0.2);
+  }
+
+  .pill-warning {
+    @apply px-3 py-1 rounded-full text-xs uppercase tracking-wider font-medium;
+    background: hsl(43 96% 56% / 0.1);
+    color: hsl(43 96% 47%);
+    border: 1px solid hsl(43 96% 56% / 0.2);
+  }
+
+  .dark .pill-warning {
+    background: hsl(43 96% 56% / 0.1);
+    color: hsl(45 93% 58%);
+    border: 1px solid hsl(43 96% 56% / 0.2);
+  }
+
+  .pill-success {
+    @apply px-3 py-1 rounded-full text-xs uppercase tracking-wider font-medium;
+    background: hsl(160 84% 39% / 0.1);
+    color: hsl(160 84% 32%);
+    border: 1px solid hsl(160 84% 39% / 0.2);
+  }
+
+  .dark .pill-success {
+    background: hsl(160 84% 55% / 0.1);
+    color: hsl(160 84% 55%);
+    border: 1px solid hsl(160 84% 55% / 0.2);
+  }
+
+  .pill-info {
+    @apply px-3 py-1 rounded-full text-xs uppercase tracking-wider font-medium;
+    background: hsl(215 25% 50% / 0.1);
+    color: hsl(215 25% 34%);
+    border: 1px solid hsl(215 25% 50% / 0.2);
+  }
+
+  .dark .pill-info {
+    background: hsl(215 25% 60% / 0.1);
+    color: hsl(215 25% 60%);
+    border: 1px solid hsl(215 25% 60% / 0.2);
+  }
+
+  /* Low priority - Neutral */
+  .pill-low {
+    @apply px-3 py-1 rounded-full text-xs uppercase tracking-wider font-medium;
+    background: hsl(215 25% 50% / 0.1);
+    color: hsl(215 25% 34%);
+    border: 1px solid hsl(215 25% 50% / 0.2);
+  }
+
+  .dark .pill-low {
+    background: hsl(215 25% 60% / 0.1);
+    color: hsl(215 25% 60%);
+    border: 1px solid hsl(215 25% 60% / 0.2);
+  }
+
+  /* ============================================
+     SEMANTIC CHART TOKENS
+     Sci-Fi (Neon) in Dark, Print-friendly in Light
+     ============================================ */
+
+  /* Chart Line A: Primary trajectory */
+  .chart-line-primary {
+    stroke: hsl(217 91% 50%);
+    /* Deep Sky Blue - Light Mode */
+  }
+
+  .dark .chart-line-primary {
+    stroke: hsl(187 94% 57%);
+    /* Neon Cyan - Dark Mode */
+  }
+
+  /* Chart Line B: Target/Secondary */
+  .chart-line-secondary {
+    stroke: hsl(160 84% 32%);
+    /* Forest Green - Light Mode */
+  }
+
+  .dark .chart-line-secondary {
+    stroke: hsl(160 84% 55%);
+    /* Neon Emerald - Dark Mode */
+  }
+
+  /* Chart Axis Labels */
+  .chart-axis-label {
+    fill: hsl(215 16% 47%);
+    /* Slate-600 - Light Mode */
+  }
+
+  .dark .chart-axis-label {
+    fill: hsl(215 20% 65%);
+    /* Slate-400 - Dark Mode */
+  }
+
+  /* ============================================
+     SKELETON / SHIMMER ANIMATION
+     ============================================ */
+
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        hsl(var(--muted-foreground) / 0.08) 50%,
+        transparent 100%);
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .dark .shimmer::after {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        hsl(199 89% 70% / 0.05) 50%,
+        transparent 100%);
+  }
+}
