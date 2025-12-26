@@ -263,11 +263,11 @@
   }
 
   html {
-    @apply h-full;
+    @apply h-full overflow-hidden;
   }
 
   body {
-    @apply h-full bg-background text-foreground antialiased;
+    @apply h-full bg-background text-foreground antialiased overflow-hidden;
     font-family: 'Inter', system-ui, sans-serif;
     transition: background-color 0.5s ease, color 0.3s ease;
   }

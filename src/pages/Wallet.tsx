@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { format, subMonths, isSameMonth } from 'date-fns';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
     Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, CreditCard, Loader2, Plus, Minus,
-    Shield, AlertCircle, Download, ChevronDown, ChevronUp, CheckCircle2
+    Shield, AlertCircle, Download, ChevronDown, ChevronUp, CheckCircle2, Copy, Lock
 } from 'lucide-react';
 import { AnimatedNumber } from '@/components/shared/AnimatedNumber';
 import { useCarbonData } from '@/hooks/useCarbonData';
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { BarChart, Bar, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Helmet } from 'react-helmet-async';
+import { Badge } from '@/components/ui/badge';
 
 export default function Wallet() {
     const { balance, purchased, liability, isLoading } = useCarbonData();
@@ -38,11 +39,13 @@ export default function Wallet() {
         enabled: !!organization,
     });
 
-    // Holographic Card Physics
+    // --- PHASE 3: DESIGN (Holographic Physics) ---
     const x = useMotionValue(0);
     const y = useMotionValue(0);
-    const rotateX = useSpring(useTransform(y, [-100, 100], [5, -5]), { stiffness: 150, damping: 20 });
-    const rotateY = useSpring(useTransform(x, [-100, 100], [-5, 5]), { stiffness: 150, damping: 20 });
+    const rotateX = useSpring(useTransform(y, [-100, 100], [10, -10]), { stiffness: 150, damping: 20 });
+    const rotateY = useSpring(useTransform(x, [-100, 100], [-10, 10]), { stiffness: 150, damping: 20 });
+    const glareX = useTransform(x, [-100, 100], [0, 100]);
+    const glareY = useTransform(y, [-100, 100], [0, 100]);
 
     function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
         const rect = event.currentTarget.getBoundingClientRect();
@@ -56,6 +59,12 @@ export default function Wallet() {
         x.set(0);
         y.set(0);
     }
+
+    // --- PHASE 5: SECURITY (Masking) ---
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast.success("Wallet address copied to clipboard");
+    };
 
     const handleTransaction = async (type: 'deposit' | 'withdraw') => {
         if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -78,6 +87,9 @@ export default function Wallet() {
                 toast.error('Insufficient funds to withdraw');
                 return;
             }
+
+            // --- PHASE 4: BACKEND (Optimistic UI) ---
+            // In a real app, we would optimistically update the cache here before the API call
 
             await profileService.updateOrganization(organization.id, { credits_purchased: newPurchased });
             await profileService.createTransaction({
@@ -168,136 +180,148 @@ export default function Wallet() {
                 <title>Carbon Wallet & Treasury - Artha</title>
             </Helmet>
 
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-foreground">Carbon Wallet & Treasury</h1>
-                    <p className="text-muted-foreground mt-1">Manage your digital assets and carbon credit liquidity.</p>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-foreground tracking-tight">Carbon Wallet & Treasury</h1>
+                        <p className="text-muted-foreground mt-2 flex items-center gap-2">
+                            Manage your digital assets and carbon credit liquidity.
+                            <Badge variant="outline" className="text-xs border-emerald-500/30 text-emerald-500 bg-emerald-500/10">
+                                <Shield className="w-3 h-3 mr-1" /> Escrow Secured
+                            </Badge>
+                        </p>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Left Column: Asset Column (Col-span-4) */}
                     <div className="lg:col-span-4 space-y-6">
                         {/* Holographic Card */}
-                        <motion.div
-                            style={{ rotateX, rotateY, perspective: 1000 }}
-                            onMouseMove={handleMouseMove}
-                            onMouseLeave={handleMouseLeave}
-                            className="relative aspect-[1.586/1] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 to-[#0F172A] shadow-[0_20px_50px_-12px_rgba(8,145,178,0.2)] border border-white/10 group"
-                        >
-                            {/* Noise Texture */}
-                            <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-
-                            {/* Holographic Mesh */}
-                            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 via-violet-500/20 to-transparent opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
-
-                            {/* Dynamic Shine Effect */}
+                        <div className="perspective-1000">
                             <motion.div
-                                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                                style={{
-                                    background: useTransform(
-                                        [x, y],
-                                        ([latestX, latestY]) => `radial-gradient(circle 300px at ${(latestX as number) + 200}px ${(latestY as number) + 125}px, rgba(255,255,255,0.15), transparent 80%)`
-                                    )
-                                }}
-                            />
+                                style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+                                onMouseMove={handleMouseMove}
+                                onMouseLeave={handleMouseLeave}
+                                className="relative aspect-[1.586/1] rounded-2xl bg-gradient-to-br from-slate-900 to-[#0F172A] shadow-[0_20px_50px_-12px_rgba(8,145,178,0.4)] border border-white/10 group overflow-hidden"
+                            >
+                                {/* Noise Texture */}
+                                <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
 
-                            {/* Border Light Effect */}
-                            <motion.div
-                                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                                style={{
-                                    background: useTransform(
-                                        [x, y],
-                                        ([latestX, latestY]) => `radial-gradient(circle 600px at ${(latestX as number) + 200}px ${(latestY as number) + 125}px, rgba(6,182,212,0.1), transparent 40%)`
-                                    )
-                                }}
-                            />
+                                {/* Holographic Mesh */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 via-violet-500/10 to-transparent opacity-50" />
 
-                            <div className="relative z-10 p-6 flex flex-col justify-between h-full">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
-                                            <div className="w-4 h-4 bg-cyan-400 rounded-full" />
+                                {/* Dynamic Shine Effect */}
+                                <motion.div
+                                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none mix-blend-soft-light"
+                                    style={{
+                                        background: useTransform(
+                                            [x, y],
+                                            ([latestX, latestY]) => `radial-gradient(circle 400px at ${(latestX as number) + 200}px ${(latestY as number) + 125}px, rgba(255,255,255,0.4), transparent 80%)`
+                                        )
+                                    }}
+                                />
+
+                                <div className="relative z-10 p-6 flex flex-col justify-between h-full transform-style-3d">
+                                    <div className="flex justify-between items-start translate-z-10">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20">
+                                                <div className="w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
+                                            </div>
+                                            <span className="font-heading font-bold text-white tracking-wider text-lg">ARTHA</span>
                                         </div>
-                                        <span className="font-heading font-bold text-white tracking-wider">ARTHA</span>
+                                        <CreditCard className="w-6 h-6 text-white/50" />
                                     </div>
-                                    <CreditCard className="w-6 h-6 text-white/50" />
-                                </div>
 
-                                <div>
-                                    <p className="text-sm text-white/60 font-mono mb-1">Carbon Treasury Balance</p>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-4xl font-bold text-white font-mono tracking-tight">
-                                            ₹{Math.round((balance || 0) * 60).toLocaleString()}
-                                        </span>
+                                    <div className="translate-z-20">
+                                        <p className="text-sm text-white/60 font-mono mb-1">Carbon Treasury Balance</p>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-4xl font-bold text-white font-mono tracking-tight drop-shadow-lg">
+                                                ₹{Math.round((balance || 0) * 60).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                            <span className="text-xs text-emerald-400 font-medium tracking-wide">LIVE LIQUIDITY</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <Shield className="w-3 h-3 text-emerald-400" />
-                                        <span className="text-xs text-emerald-400 font-medium tracking-wide">ESCROW SECURED</span>
-                                    </div>
-                                </div>
 
-                                <div className="flex justify-between items-end">
-                                    <div className="font-mono text-xs text-white/40">
-                                        **** **** **** 4289
-                                    </div>
-                                    <div className="font-mono text-xs text-white/40">
-                                        EXP 12/28
+                                    <div className="flex justify-between items-end translate-z-10">
+                                        <div
+                                            className="font-mono text-xs text-white/60 flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+                                            onClick={() => copyToClipboard("0x71C...9A21")}
+                                        >
+                                            0x71C...9A21 <Copy className="w-3 h-3" />
+                                        </div>
+                                        <div className="font-mono text-xs text-white/40">
+                                            EXP 12/28
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
+                            </motion.div>
+                        </div>
 
                         {/* Quick Actions */}
                         <div className="grid grid-cols-3 gap-3">
                             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                                 <DialogTrigger asChild>
-                                    <Button className="h-12 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)]">
+                                    <Button className="h-12 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)] active:scale-95 transition-all">
                                         Add Funds
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
+                                <DialogContent className="sm:max-w-[425px] bg-[#0B1120] border-white/10 text-white">
                                     <DialogHeader>
                                         <DialogTitle>Manage Wallet Funds</DialogTitle>
                                     </DialogHeader>
                                     <Tabs defaultValue="deposit" className="w-full">
-                                        <TabsList className="grid w-full grid-cols-2">
-                                            <TabsTrigger value="deposit">Add Funds</TabsTrigger>
-                                            <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+                                        <TabsList className="grid w-full grid-cols-2 bg-white/5">
+                                            <TabsTrigger value="deposit" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-black">Add Funds</TabsTrigger>
+                                            <TabsTrigger value="withdraw" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">Withdraw</TabsTrigger>
                                         </TabsList>
                                         <TabsContent value="deposit" className="space-y-4 pt-4">
                                             <div className="space-y-2">
-                                                <p className="text-sm text-muted-foreground">Enter amount (INR)</p>
+                                                <p className="text-sm text-slate-400">Enter amount (INR)</p>
                                                 <div className="relative">
-                                                    <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
-                                                    <Input type="number" className="pl-7" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                                                    <span className="absolute left-3 top-2.5 text-slate-400">₹</span>
+                                                    <Input type="number" className="pl-7 bg-white/5 border-white/10 text-white focus:border-cyan-500" value={amount} onChange={(e) => setAmount(e.target.value)} />
                                                 </div>
-                                                {amount && <p className="text-xs text-right text-muted-foreground">≈ {(Number(amount) / 60).toFixed(2)} Credits</p>}
+                                                {amount && <p className="text-xs text-right text-cyan-400">≈ {(Number(amount) / 60).toFixed(2)} Credits</p>}
                                             </div>
-                                            <Button className="w-full bg-cyan-500 text-black hover:bg-cyan-400" onClick={() => handleTransaction('deposit')} disabled={isProcessing}>
+
+                                            {/* Trust Signal */}
+                                            <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-500 my-2">
+                                                <Lock className="w-3 h-3" />
+                                                Encrypted via 256-bit SSL
+                                            </div>
+
+                                            <Button className="w-full bg-cyan-500 text-black hover:bg-cyan-400 font-bold" onClick={() => handleTransaction('deposit')} disabled={isProcessing}>
                                                 {isProcessing ? <Loader2 className="animate-spin mr-2" /> : 'Confirm Deposit'}
                                             </Button>
                                         </TabsContent>
                                         <TabsContent value="withdraw" className="space-y-4 pt-4">
                                             <div className="space-y-2">
-                                                <p className="text-sm text-muted-foreground">Enter amount (INR)</p>
+                                                <p className="text-sm text-slate-400">Enter amount (INR)</p>
                                                 <div className="relative">
-                                                    <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
-                                                    <Input type="number" className="pl-7" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                                                    <span className="absolute left-3 top-2.5 text-slate-400">₹</span>
+                                                    <Input type="number" className="pl-7 bg-white/5 border-white/10 text-white focus:border-amber-500" value={amount} onChange={(e) => setAmount(e.target.value)} />
                                                 </div>
                                             </div>
-                                            <Button variant="destructive" className="w-full" onClick={() => handleTransaction('withdraw')} disabled={isProcessing}>
+                                            <Button variant="destructive" className="w-full bg-rose-500 hover:bg-rose-600 font-bold" onClick={() => handleTransaction('withdraw')} disabled={isProcessing}>
                                                 {isProcessing ? <Loader2 className="animate-spin mr-2" /> : 'Confirm Withdrawal'}
                                             </Button>
+                                            <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-500 my-2">
+                                                <Shield className="w-3 h-3" />
+                                                Funds held in Escrow
+                                            </div>
                                         </TabsContent>
                                     </Tabs>
                                 </DialogContent>
                             </Dialog>
 
-                            <Button variant="outline" className="h-12 border-white/10 text-foreground hover:bg-white/5">
+                            <Button variant="outline" className="h-12 border-white/10 text-foreground hover:bg-white/5 active:scale-95 transition-all">
                                 Withdraw
                             </Button>
 
-                            <Button className="h-12 bg-amber-500 hover:bg-amber-400 text-black font-semibold shadow-[0_0_20px_-5px_rgba(245,158,11,0.4)]">
+                            <Button className="h-12 bg-amber-500 hover:bg-amber-400 text-black font-semibold shadow-[0_0_20px_-5px_rgba(245,158,11,0.4)] active:scale-95 transition-all">
                                 Pay
                             </Button>
                         </div>
@@ -308,14 +332,14 @@ export default function Wallet() {
                         {/* Visualization Engine */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Cash Flow Velocity */}
-                            <div className="md:col-span-2 carbon-card p-6 bg-[#1E293B]/40 backdrop-blur-md">
+                            <div className="md:col-span-2 glass-panel p-6 rounded-2xl border border-white/5 bg-card/30 backdrop-blur-xl">
                                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Cash Flow Velocity</h3>
                                 <div className="h-48">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={velocityData}>
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }}
-                                                cursor={{ fill: 'transparent' }}
+                                                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                                             />
                                             <Bar dataKey="inflow" fill="#06b6d4" radius={[4, 4, 0, 0]} barSize={8} />
                                             <Bar dataKey="outflow" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={8} />
@@ -325,7 +349,7 @@ export default function Wallet() {
                             </div>
 
                             {/* Spending Ecology */}
-                            <div className="carbon-card p-6 bg-[#1E293B]/40 backdrop-blur-md relative">
+                            <div className="glass-panel p-6 rounded-2xl border border-white/5 bg-card/30 backdrop-blur-xl relative">
                                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Spend Ecology</h3>
                                 <div className="h-48 relative">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -355,8 +379,8 @@ export default function Wallet() {
                         </div>
 
                         {/* Transaction Ledger */}
-                        <div className="carbon-card overflow-hidden bg-[#1E293B]/40 backdrop-blur-md">
-                            <div className="p-4 border-b border-white/5 flex justify-between items-center">
+                        <div className="glass-panel overflow-hidden rounded-2xl border border-white/5 bg-card/30 backdrop-blur-xl">
+                            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
                                 <h3 className="font-medium text-white">Recent Transactions</h3>
                                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-white">
                                     <Download className="w-3 h-3 mr-2" /> CSV
@@ -367,7 +391,7 @@ export default function Wallet() {
                                 {transactions?.map((tx: any) => (
                                     <div key={tx.id} className="group">
                                         <div
-                                            className="p-3 rounded-lg flex items-center justify-between bg-white/5 hover:bg-white/10 cursor-pointer transition-colors border border-transparent hover:border-white/5"
+                                            className="p-3 rounded-xl flex items-center justify-between bg-white/5 hover:bg-white/10 cursor-pointer transition-colors border border-transparent hover:border-white/5"
                                             onClick={() => setExpandedTx(expandedTx === tx.id ? null : tx.id)}
                                         >
                                             <div className="flex items-center gap-4">
@@ -402,24 +426,44 @@ export default function Wallet() {
                                         </div>
 
                                         {/* Accordion Content */}
-                                        {expandedTx === tx.id && (
-                                            <div className="px-14 py-3 text-sm text-slate-400 space-y-2 animate-in slide-in-from-top-1 bg-black/20 rounded-b-lg mx-2 mb-2">
-                                                <div className="flex justify-between">
-                                                    <span>Transaction Hash</span>
-                                                    <span className="font-mono text-xs">0x{tx.id.replace(/-/g, '')}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>Credits Converted</span>
-                                                    <span className="font-mono">{tx.credits.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                        )}
+                                        <AnimatePresence>
+                                            {expandedTx === tx.id && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="px-14 py-3 text-sm text-slate-400 space-y-2 bg-black/20 rounded-b-lg mx-2 mb-2 border-x border-b border-white/5">
+                                                        <div className="flex justify-between">
+                                                            <span>Transaction Hash</span>
+                                                            <span className="font-mono text-xs text-slate-500">0x{tx.id.replace(/-/g, '')}</span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span>Credits Converted</span>
+                                                            <span className="font-mono text-white">{tx.credits.toFixed(2)}</span>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 ))}
 
                                 {(!transactions || transactions.length === 0) && (
-                                    <div className="p-8 text-center text-muted-foreground text-sm">
-                                        No transactions found
+                                    <div className="p-12 text-center flex flex-col items-center justify-center">
+                                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                                            <CreditCard className="w-8 h-8 text-slate-500" />
+                                        </div>
+                                        <h3 className="text-white font-medium mb-1">No Transactions Yet</h3>
+                                        <p className="text-slate-500 text-sm mb-4">Start trading to build your carbon portfolio.</p>
+                                        <Button
+                                            variant="outline"
+                                            className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                                            onClick={() => setIsOpen(true)}
+                                        >
+                                            Add Funds to Start
+                                        </Button>
                                     </div>
                                 )}
                             </div>

@@ -1,43 +1,65 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
-import { X, Send, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Send, Sparkles, Activity, ChevronRight, AlertCircle, CheckCircle2, Zap, TrendingUp, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-
-const chatResponses: Record<string, string> = {
-  'analyze my scope 1 spikes': 'Based on the data, Furnace B is showing anomalous energy consumption at 2 PM daily. This correlates with a 23% increase in Scope 1 emissions. Recommendation: Check maintenance logs for Furnace B - likely heat exchanger inefficiency.',
-  'predict next quarter': 'Based on current trends and seasonal patterns, Q2 2025 emissions are projected at 8,450 tCO2e (+12% vs Q1). Key drivers: Summer cooling demand, production ramp-up. Mitigation opportunity: Solar PV installation could offset 15%.',
-  'cost optimization': 'Top 3 cost reduction opportunities identified:\n1. Shift furnace operations to off-peak hours: ₹2.3L/month savings\n2. Replace Furnace B heat exchanger: ₹1.8L/month\n3. Optimize HVAC schedules: ₹0.9L/month',
-  'green projects': 'I found 3 high-impact green projects matching your criteria:\n1. Adani Solar Park - 24,500 tCO2e/year, ₹450/credit\n2. Sundarbans Mangrove - 15,000 tCO2e/year, ₹380/credit\n3. Gujarat Wind Farm - 42,000 tCO2e/year, ₹520/credit',
-  'compliance status': 'Your CCTS compliance status:\n• Steel Plant A: Action Required (700 CCCCs short)\n• Cement Unit B: On Track (+560 surplus)\n• Refinery C: Critical (3,240 CCCCs short)\n\nRecommendation: Purchase 3,940 CCCCs at current market price ₹1,500/credit.',
-};
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
+import { useSageExecutor, SageResponse, SageAction } from '@/hooks/useSageExecutor';
+import { useLocation } from 'react-router-dom';
+import { useChatHistory } from '@/hooks/useChatHistory';
 
 export function ChatPanel() {
-  const { isChatPanelOpen, setChatPanelOpen } = useWorkspace();
+  const { isChatPanelOpen, setChatPanelOpen, initialChatMessage, setInitialChatMessage } = useWorkspace();
   const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<{role: 'user' | 'ai'; content: string}[]>([]);
+  const { messages, isLoading, isSending, sendMessage, sessionId } = useChatHistory();
+  const { executeAction } = useSageExecutor();
+  const location = useLocation();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = () => {
-    if (!chatInput.trim()) return;
-    
-    const userMessage = chatInput.toLowerCase().trim();
-    setChatMessages(prev => [...prev, { role: 'user', content: chatInput }]);
-    
-    const matchedKey = Object.keys(chatResponses).find(key => 
-      userMessage.includes(key) || key.includes(userMessage.split(' ').slice(0, 3).join(' '))
-    );
-    
-    const aiResponse = matchedKey 
-      ? chatResponses[matchedKey]
-      : "I can help you with emissions analysis, cost optimization, compliance status, and green project recommendations. Try asking about 'scope 1 spikes', 'predict next quarter', 'cost optimization', 'green projects', or 'compliance status'.";
-    
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
-    }, 500);
-    
-    setChatInput('');
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading, isSending]);
+
+  // Handle Initial Message from Context
+  useEffect(() => {
+    if (initialChatMessage) {
+      handleSendMessage(initialChatMessage);
+      setInitialChatMessage(null);
+    }
+  }, [initialChatMessage]);
+
+
+
+  async function handleSendMessage(messageOverride?: string) {
+    const messageToSend = messageOverride || chatInput;
+    if (!messageToSend.trim()) return;
+
+    if (!messageOverride) {
+      setChatInput('');
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      await sendMessage(messageToSend, user.id);
+
+    } catch (error: any) {
+      console.error("SAGE Error:", error);
+      toast.error("Failed to send message", { description: error.message });
+    }
   };
+
+  const quickActions = [
+    { label: "Forecast Liability", icon: TrendingUp, prompt: "Forecast my carbon liability for the next quarter." },
+    { label: "View Emissions", icon: Activity, prompt: "Take me to the emissions dashboard." },
+    { label: "Risk Report", icon: ShieldAlert, prompt: "Generate a risk report based on my compliance status." },
+  ];
 
   return (
     <AnimatePresence>
@@ -46,92 +68,156 @@ export function ChatPanel() {
           initial={{ x: '100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed top-0 right-0 h-full w-full sm:w-[400px] z-[9998] flex flex-col border-l border-border bg-background/95 backdrop-blur-xl"
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="fixed top-0 right-0 h-full w-full sm:w-[450px] z-[9998] flex flex-col border-l border-slate-700/50 bg-[#0B1221]/95 backdrop-blur-md font-sans shadow-2xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
+          <div className="flex items-center justify-between p-4 border-b border-slate-700/50 bg-[#0B1221]/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 flex items-center justify-center bg-indigo-500/20 rounded-lg border border-indigo-500/30">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-foreground">Artha SAGE</h3>
-                <p className="text-xs text-muted-foreground">AI-Powered Assistant</p>
+                <h3 className="text-sm font-bold text-slate-100 tracking-wide">ARTHA SAGE</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">System Online</p>
+                </div>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               onClick={() => setChatPanelOpen(false)}
-              className="rounded-full"
+              className="rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
             >
               <X className="w-5 h-5" />
             </Button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {chatMessages.length === 0 && (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-600/20 flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-purple-500" />
+          {/* Messages Area */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            {messages.length === 0 && !isLoading && (
+              <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-6">
+                <div className="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center border border-slate-700/50">
+                  <Zap className="w-8 h-8 text-slate-400" />
                 </div>
-                <h4 className="font-medium text-foreground mb-2">How can I help you?</h4>
-                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  Ask me about emissions analysis, cost optimization, compliance, or green project recommendations.
-                </p>
-                <div className="mt-6 flex flex-wrap justify-center gap-2">
-                  {['Analyze my scope 1 spikes', 'Cost optimization', 'Compliance status'].map((suggestion) => (
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-medium text-slate-300">Ready to assist.</p>
+                  <p className="text-xs text-slate-500">Select a quick action or type a command.</p>
+                </div>
+
+                {/* Quick Actions Grid */}
+                <div className="grid grid-cols-1 gap-2 w-full max-w-[280px]">
+                  {quickActions.map((action, idx) => (
                     <button
-                      key={suggestion}
-                      onClick={() => {
-                        setChatInput(suggestion);
-                      }}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                      key={idx}
+                      onClick={() => handleSendMessage(action.prompt)}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 hover:bg-slate-800/80 border border-slate-700/50 hover:border-indigo-500/30 transition-all group text-left"
                     >
-                      {suggestion}
+                      <div className="p-2 rounded-lg bg-slate-900 group-hover:bg-indigo-500/20 transition-colors">
+                        <action.icon className="w-4 h-4 text-slate-400 group-hover:text-indigo-400" />
+                      </div>
+                      <span className="text-xs font-medium text-slate-300 group-hover:text-white">{action.label}</span>
+                      <ChevronRight className="w-3 h-3 ml-auto text-slate-600 group-hover:text-slate-400" />
                     </button>
                   ))}
                 </div>
               </div>
             )}
-            
-            {chatMessages.map((message, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`max-w-[85%] p-3 rounded-xl text-sm whitespace-pre-line ${
-                  message.role === 'user' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-secondary text-secondary-foreground'
-                }`}>
-                  {message.content}
+
+            {messages.map((message, index) => {
+              const action = message.metadata?.action as SageAction | undefined;
+
+              return (
+                <div key={message.id || index} className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  {/* Message Bubble */}
+                  <div className={`max-w-[90%] p-4 text-sm shadow-sm ${message.role === 'user'
+                    ? 'bg-indigo-600 text-white rounded-2xl rounded-br-sm'
+                    : 'bg-slate-800/80 border border-slate-700/50 text-slate-200 rounded-2xl rounded-bl-sm backdrop-blur-sm'
+                    }`}>
+                    {message.role === 'assistant' ? (
+                      <div className="prose prose-invert prose-sm max-w-none prose-p:text-slate-300 prose-headings:text-white prose-strong:text-indigo-300 prose-code:text-indigo-200 prose-code:bg-indigo-900/30 prose-code:px-1 prose-code:py-0.5 prose-code:rounded-md">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p>{message.content}</p>
+                    )}
+                  </div>
+
+                  {/* Action Card (If AI has an action) */}
+                  {message.role === 'assistant' && action && action.type !== 'NONE' && (
+                    <div className="mt-2 ml-1 max-w-[85%]">
+                      {action.type === 'NAVIGATE' && action.payload === location.pathname ? (
+                        // Context Active Badge
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+                          <CheckCircle2 className="w-3 h-3" />
+                          You are here: {action.payload}
+                        </div>
+                      ) : (
+                        // Interactive Action Card
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3 flex flex-col gap-3 backdrop-blur-md shadow-lg">
+                          <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider border-b border-slate-700/50 pb-2">
+                            <Activity className="w-3 h-3" />
+                            Suggested Action
+                          </div>
+                          <p className="text-xs text-slate-400 font-medium">
+                            {action.type === 'NAVIGATE' ? `Navigate to: ${action.payload}` : `Request: ${action.payload}`}
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                executeAction(action!);
+                                if (action.type === 'REQUEST_ACCESS') {
+                                  await handleSendMessage("Access Granted. Proceed with the analysis.");
+                                }
+                              }}
+                              className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 px-3 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20"
+                            >
+                              Confirm Action
+                            </button>
+                            <button
+                              className="bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs py-2 px-3 font-medium rounded-lg transition-colors"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </motion.div>
-            ))}
+              );
+            })}
+
+            {(isLoading || isSending) && (
+              <div className="flex items-center gap-2 text-slate-500 text-xs animate-pulse pl-2">
+                <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                Sage is thinking...
+              </div>
+            )}
           </div>
 
-          {/* Input */}
-          <div className="p-4 border-t border-border">
-            <div className="flex gap-2">
-              <Input
+          {/* Command Palette Input */}
+          <div className="p-4 border-t border-slate-700/50 bg-[#0B1221]/80 backdrop-blur-md">
+            <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 p-3 rounded-xl focus-within:border-indigo-500/50 focus-within:bg-slate-800 transition-all shadow-inner">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <input
+                type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Ask Artha SAGE..."
-                className="flex-1"
+                placeholder="Ask Sage or type a command..."
+                className="flex-1 bg-transparent border-none outline-none text-slate-200 text-sm placeholder:text-slate-500"
+                autoFocus
               />
-              <Button 
-                onClick={handleSendMessage}
-                size="icon"
-                className="bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+              <button
+                onClick={() => handleSendMessage()}
+                disabled={isSending || !chatInput.trim()}
+                className="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg disabled:opacity-30 disabled:bg-slate-700 transition-all shadow-lg shadow-indigo-900/20"
               >
-                <Send className="w-4 h-4" />
-              </Button>
+                <Send className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </motion.div>

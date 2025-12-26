@@ -17,7 +17,7 @@ serve(async (req) => {
 
         // 1. Initialize Clients
         const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY") || "");
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
 
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",

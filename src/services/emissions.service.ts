@@ -57,5 +57,47 @@ export const emissionsService = {
 
         if (error) throw error;
         return data;
+    },
+
+    async processBill(file: File, userId: string) {
+        // 1. Upload to Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}/${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('bills')
+            .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        // 2. Get Signed URL (valid for 60 seconds)
+        const { data: { signedUrl }, error: urlError } = await supabase.storage
+            .from('bills')
+            .createSignedUrl(fileName, 60);
+
+        if (urlError) throw urlError;
+
+        // 3. Call Edge Function
+        const { data, error: funcError } = await supabase.functions.invoke('process-bill', {
+            body: { fileUrl: signedUrl, userId }
+        });
+
+        if (funcError) {
+            console.error("Edge Function Error:", funcError);
+            // Try to extract the error message from the response body if available
+            let errorMessage = funcError.message;
+            try {
+                if (funcError instanceof Error && 'context' in funcError) {
+                    // @ts-ignore
+                    const body = await funcError.context.json();
+                    if (body.error) errorMessage = body.error;
+                }
+            } catch (e) {
+                // Ignore parsing error
+            }
+            throw new Error(errorMessage);
+        }
+
+        return data;
     }
 };

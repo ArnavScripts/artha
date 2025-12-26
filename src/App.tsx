@@ -3,7 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "next-themes";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
@@ -41,6 +42,54 @@ function PageLoader() {
   return <GlobalLoader />;
 }
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/*"
+          element={
+            <AuthGuard>
+              <MainLayout>
+                <Routes>
+                  {/* Carbon Mode Routes */}
+                  <Route path="/dashboard" element={<CarbonDashboard />} />
+                  <Route path="/emissions" element={<EmissionsTracker />} />
+                  <Route path="/market" element={<CarbonMarket />} />
+                  <Route path="/compliance" element={<ComplianceReports />} />
+                  <Route path="/regulatory" element={<RegulatoryHub />} />
+                  <Route path="/intelligence" element={<Intelligence />} />
+
+                  {/* Green Mode Routes */}
+                  <Route path="/green" element={<GreenDashboard />} />
+                  <Route path="/green/marketplace" element={<GreenMarketplace />} />
+                  <Route path="/green/portfolio" element={<GreenPortfolio />} />
+                  <Route path="/green/verification" element={<GreenVerification />} />
+
+                  {/* Settings */}
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/wallet" element={<Wallet />} />
+
+                  {/* Catch-all for protected: redirect to dashboard */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </MainLayout>
+            </AuthGuard>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -52,45 +101,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-
-                    {/* Protected Routes */}
-                    <Route
-                      path="/*"
-                      element={
-                        <AuthGuard>
-                          <MainLayout>
-                            <Routes>
-                              {/* Carbon Mode Routes */}
-                              <Route path="/dashboard" element={<CarbonDashboard />} />
-                              <Route path="/emissions" element={<EmissionsTracker />} />
-                              <Route path="/market" element={<CarbonMarket />} />
-                              <Route path="/compliance" element={<ComplianceReports />} />
-                              <Route path="/regulatory" element={<RegulatoryHub />} />
-                              <Route path="/intelligence" element={<Intelligence />} />
-
-                              {/* Green Mode Routes */}
-                              <Route path="/green" element={<GreenDashboard />} />
-                              <Route path="/green/marketplace" element={<GreenMarketplace />} />
-                              <Route path="/green/portfolio" element={<GreenPortfolio />} />
-                              <Route path="/green/verification" element={<GreenVerification />} />
-
-                              {/* Settings */}
-                              <Route path="/settings" element={<Settings />} />
-                              <Route path="/wallet" element={<Wallet />} />
-
-                              {/* Catch-all for protected: redirect to dashboard */}
-                              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                            </Routes>
-                          </MainLayout>
-                        </AuthGuard>
-                      }
-                    />
-                  </Routes>
+                  <AnimatedRoutes />
                 </Suspense>
               </BrowserRouter>
             </ErrorBoundary>

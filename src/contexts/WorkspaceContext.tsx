@@ -12,6 +12,8 @@ interface WorkspaceContextType {
   isSimpleView: boolean;
   isChatPanelOpen: boolean;
   setChatPanelOpen: (open: boolean) => void;
+  initialChatMessage: string | null;
+  setInitialChatMessage: (message: string | null) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -20,6 +22,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<WorkspaceMode>('carbon');
   const [viewDensity, setViewDensity] = useState<ViewDensity>('owner');
   const [isChatPanelOpen, setChatPanelOpen] = useState(false);
+  const [initialChatMessage, setInitialChatMessage] = useState<string | null>(null);
 
   const setMode = useCallback((newMode: WorkspaceMode) => {
     try {
@@ -37,15 +40,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const isSimpleView = viewDensity === 'owner';
 
   return (
-    <WorkspaceContext.Provider value={{ 
-      mode, 
-      setMode, 
-      toggleMode, 
-      viewDensity, 
+    <WorkspaceContext.Provider value={{
+      mode,
+      setMode,
+      toggleMode,
+      viewDensity,
       setViewDensity,
       isSimpleView,
       isChatPanelOpen,
-      setChatPanelOpen
+      setChatPanelOpen,
+      initialChatMessage,
+      setInitialChatMessage
     }}>
       {children}
     </WorkspaceContext.Provider>

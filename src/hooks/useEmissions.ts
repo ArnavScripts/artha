@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { emissionsService, EmissionRecord, AnomalyLog, LiveFeedItem } from '@/services/emissions.service';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 export function useEmissions() {
   const queryClient = useQueryClient();
@@ -22,13 +23,17 @@ export function useEmissions() {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: emissionsService.uploadEmissionRecord,
+    mutationFn: async (file: File) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      return emissionsService.processBill(file, user.id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['emissions-records'] });
-      toast.success('Emission record uploaded successfully');
+      toast.success('Bill processed and emission record created successfully');
     },
     onError: (error) => {
-      toast.error(`Upload failed: ${error.message}`);
+      toast.error(`Processing failed: ${error.message}`);
     },
   });
 
