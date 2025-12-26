@@ -16,24 +16,40 @@ serve(async (req) => {
         const { query, date_range } = await req.json();
 
         // 1. Initialize Clients
-        const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY") || "");
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" }); // Using Pro for deeper analysis
+        const apiKey = Deno.env.get("GEMINI_API_KEY");
+        if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
 
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) throw new Error("Missing Authorization header");
+
+        // Create a Supabase client with the Auth context of the logged in user
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+            Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+            {
+                global: {
+                    headers: { Authorization: authHeader },
+                },
+            }
         );
 
         // 2. Fetch Data
-        const { data: emissions } = await supabase
-            .from('emissions_records')
+        const { data: emissions, error: emissionsError } = await supabase
+            .from('emissions_log')
             .select('*')
-            .limit(50); // Fetch recent records
+            .limit(50);
 
-        const { data: anomalies } = await supabase
+        if (emissionsError) throw new Error(`Emissions fetch error: ${emissionsError.message}`);
+
+        const { data: anomalies, error: anomaliesError } = await supabase
             .from('anomaly_logs')
             .select('*')
             .limit(10);
+
+        if (anomaliesError) throw new Error(`Anomalies fetch error: ${anomaliesError.message}`);
 
         // 3. Prompt Engineering
         const prompt = `
@@ -42,8 +58,8 @@ serve(async (req) => {
       User Query: "${query || "Analyze my recent emissions for anomalies"}"
       
       Data Context:
-      Emissions: ${JSON.stringify(emissions?.slice(0, 10), null, 2)}
-      Anomalies: ${JSON.stringify(anomalies, null, 2)}
+      Emissions: ${JSON.stringify(emissions?.slice(0, 10) || [], null, 2)}
+      Anomalies: ${JSON.stringify(anomalies || [], null, 2)}
       
       Task:
       Provide a concise analysis.
@@ -68,6 +84,8 @@ serve(async (req) => {
         const response = await result.response;
         const text = response.text();
 
+        console.log("Gemini Response:", text);
+
         const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
         const data = JSON.parse(jsonStr);
 
@@ -76,6 +94,7 @@ serve(async (req) => {
         });
 
     } catch (error) {
+        console.error("AI Analysis Error:", error);
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 500,

@@ -19,9 +19,9 @@ export function useCarbonData() {
     const forecast = forecastsQuery.data || [];
 
     // Calculate Net Compliance Liability
-    const scope1 = records.filter(r => r.type === 'Scope 1').reduce((acc, r) => acc + r.value, 0);
-    const scope2 = records.filter(r => r.type === 'Scope 2').reduce((acc, r) => acc + r.value, 0);
-    const scope3 = records.filter(r => r.type === 'Scope 3').reduce((acc, r) => acc + r.value, 0);
+    const scope1 = records.filter(r => r.type === 'Scope 1').reduce((acc, r) => acc + (r.carbon_emission || 0), 0);
+    const scope2 = records.filter(r => r.type === 'Scope 2').reduce((acc, r) => acc + (r.carbon_emission || 0), 0);
+    const scope3 = records.filter(r => r.type === 'Scope 3').reduce((acc, r) => acc + (r.carbon_emission || 0), 0);
     const totalLiability = scope1 + scope2 + scope3;
 
     // Calculate Balance based on Tier Cap + Purchased Credits

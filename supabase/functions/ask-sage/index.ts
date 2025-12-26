@@ -159,8 +159,9 @@ Structure:
 1. **NO STALLING:** Do NOT return messages like "Analyzing...", "Processing...", or "One moment".
 2. **IMMEDIATE RESULTS:** If you have the data (which is provided in the CONTEXT below), perform the analysis IMMEDIATELY and return the result in the \`message\` field.
 3. **SIMULATIONS:** If the user asks for a plan or simulation, and you have the data:
-   - Generate the textual plan in the \`message\` field.
-   - **CRITICAL:** You MUST also generate the structured roadmap in the \`data\` field (type: "roadmap").
+   - **CHECK EXISTING ROADMAP:** Review the "Existing Roadmap" in the CONTEXT. Do NOT generate interventions that are already listed or semantically identical.
+   - **NO DUPLICATES:** If the user asks for more strategies but you cannot find any *new* viable options based on the data, explicitly state: "I cannot identify any further viable decarbonization strategies with the current data." and do NOT return a \`data\` field.
+   - **GENERATE NEW:** Only if you find *new* strategies, generate the textual plan in the \`message\` field and the structured roadmap in the \`data\` field.
    - Set the \`action\` to \`EXECUTE_FUNC: refresh_simulation\`.
 
 ### EXAMPLE ROADMAP RESPONSE:
@@ -231,75 +232,77 @@ REMINDER: You MUST return valid JSON. If generating a plan, include the "data" f
                 message: text + "\n\n---\n**DEBUG: JSON Parse Failed**\nRaw output was not valid JSON. Action not triggered.",
                 action: { type: "NONE" }
             };
-            // 6. Handle Roadmap Generation (DB Insert)
-            if (parsedResponse.data && parsedResponse.data.type === 'roadmap') {
-                try {
-                    let scenarioId;
-
-                    if (activeScenario) {
-                        // Append to existing
-                        scenarioId = activeScenario.id;
-                        console.log("Appending to existing scenario:", scenarioId);
-                    } else {
-                        // Create new scenario if none exists
-                        const { data: newScenario, error: scenarioError } = await supabase
-                            .from('scenarios')
-                            .insert({
-                                user_id: userId,
-                                name: parsedResponse.data.title || 'AI Generated Plan',
-                                status: 'active',
-                                baseline_cost: 5000000 // Default baseline
-                            })
-                            .select()
-                            .single();
-
-                        if (scenarioError) throw scenarioError;
-                        scenarioId = newScenario.id;
-                    }
-
-                    // Create interventions
-                    if (parsedResponse.data.interventions && parsedResponse.data.interventions.length > 0) {
-                        const interventions = parsedResponse.data.interventions.map((i: any) => ({
-                            scenario_id: scenarioId,
-                            title: i.title,
-                            impact_description: i.impact_description,
-                            capex_cost: i.capex_cost || 0,
-                            npv_value: i.npv_value || 0,
-                            reduction_percentage: i.reduction_percentage || 0
-                        }));
-                        await supabase.from('interventions').insert(interventions);
-                    }
-
-                    // Ensure action is set to refresh
-                    parsedResponse.action = { type: 'EXECUTE_FUNC', payload: 'refresh_simulation' };
-
-                } catch (dbError) {
-                    console.error("Failed to update roadmap:", dbError);
-                    parsedResponse.message += "\n\n(Note: Failed to save roadmap to database.)";
-                }
-            }
-
-            await supabase
-                .from('chat_messages')
-                .insert({
-                    session_id: sessionId,
-                    role: 'assistant',
-                    content: parsedResponse.message,
-                    metadata: parsedResponse.action ? { action: parsedResponse.action } : {}
-                });
-
-            return new Response(JSON.stringify({ response: text, sessionId }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-
-        } catch (error: any) {
-            console.error("Ask-Sage Error:", error);
-            return new Response(JSON.stringify({
-                error: error.message,
-                message: error.message // Include 'message' for supabase-js compatibility
-            }), {
-                status: 200, // Return 200 to ensure client receives the error body
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
         }
-    });
+
+        // 6. Handle Roadmap Generation (DB Insert)
+        if (parsedResponse.data && parsedResponse.data.type === 'roadmap') {
+            try {
+                let scenarioId;
+
+                if (activeScenario) {
+                    // Append to existing
+                    scenarioId = activeScenario.id;
+                    console.log("Appending to existing scenario:", scenarioId);
+                } else {
+                    // Create new scenario if none exists
+                    const { data: newScenario, error: scenarioError } = await supabase
+                        .from('scenarios')
+                        .insert({
+                            user_id: userId,
+                            name: parsedResponse.data.title || 'AI Generated Plan',
+                            status: 'active',
+                            baseline_cost: 5000000 // Default baseline
+                        })
+                        .select()
+                        .single();
+
+                    if (scenarioError) throw scenarioError;
+                    scenarioId = newScenario.id;
+                }
+
+                // Create interventions
+                if (parsedResponse.data.interventions && parsedResponse.data.interventions.length > 0) {
+                    const interventions = parsedResponse.data.interventions.map((i: any) => ({
+                        scenario_id: scenarioId,
+                        title: i.title,
+                        impact_description: i.impact_description,
+                        capex_cost: i.capex_cost || 0,
+                        npv_value: i.npv_value || 0,
+                        reduction_percentage: i.reduction_percentage || 0
+                    }));
+                    await supabase.from('interventions').insert(interventions);
+                }
+
+                // Ensure action is set to refresh
+                parsedResponse.action = { type: 'EXECUTE_FUNC', payload: 'refresh_simulation' };
+
+            } catch (dbError) {
+                console.error("Failed to update roadmap:", dbError);
+                parsedResponse.message += "\n\n(Note: Failed to save roadmap to database.)";
+            }
+        }
+
+        await supabase
+            .from('chat_messages')
+            .insert({
+                session_id: sessionId,
+                role: 'assistant',
+                content: parsedResponse.message,
+                metadata: parsedResponse.action ? { action: parsedResponse.action } : {}
+            });
+
+        return new Response(JSON.stringify({ response: text, sessionId }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+    } catch (error: any) {
+        console.error("Ask-Sage Error:", error);
+        return new Response(JSON.stringify({
+            error: error.message,
+            message: error.message // Include 'message' for supabase-js compatibility
+        }), {
+            status: 200, // Return 200 to ensure client receives the error body
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+});

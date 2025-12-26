@@ -13,7 +13,7 @@ const BillDataSchema = z.object({
     unit: z.string(),
     cost: z.number().optional(),
     date: z.string(),
-    type: z.enum(['electricity', 'diesel', 'natural_gas', 'coal']).nullable(),
+    type: z.enum(['electricity', 'diesel', 'natural_gas', 'coal', 'logistics']).nullable(),
 });
 
 // Emission Factors (Grid India & Standard)
@@ -22,6 +22,15 @@ const EMISSION_FACTORS: Record<string, number> = {
     diesel: 2.68,      // kgCO2e/L
     natural_gas: 1.90, // kgCO2e/kg
     coal: 2.42,        // kgCO2e/kg
+    logistics: 0.10    // kgCO2e/tonne-km (approx road freight)
+};
+
+const ANOMALY_THRESHOLDS: Record<string, number> = {
+    electricity: 5000, // kWh
+    diesel: 500,       // L
+    natural_gas: 1000, // kg
+    coal: 1000,        // kg
+    logistics: 10000   // tonne-km
 };
 
 Deno.serve(async (req) => {
@@ -76,7 +85,14 @@ Deno.serve(async (req) => {
         );
 
         // 3. Gemini Vision Extraction
-        const prompt = `Extract data from this utility bill. Return JSON: { "consumption": number, "unit": string, "cost": number, "date": string (YYYY-MM-DD), "type": string }. Normalize "type" to: "electricity", "diesel", "natural_gas", or "coal". If unclear, return null values.`;
+        const prompt = `Extract data from this utility bill. Return a JSON object with a "items" array. Each item should have: { "consumption": number, "unit": string, "cost": number, "date": string (YYYY-MM-DD), "type": string }. 
+        
+        Rules:
+        1. Normalize "type" to: "electricity", "diesel", "natural_gas", "coal", or "logistics".
+        2. For logistics/freight, calculate "consumption" as Weight (tonnes) * Distance (km) and set unit to "tonne-km".
+        3. If unit is "gallons", keep it as "gallons_us" (we will convert it).
+        4. If unclear, use "other". 
+        5. If the bill contains multiple line items, list them as separate items.`;
 
         let result;
         try {
@@ -91,12 +107,6 @@ Deno.serve(async (req) => {
             ]);
         } catch (error: any) {
             console.error(`Error with model ${primaryModelName}:`, error);
-            // If the primary model failed, try the fallback (if it's different and we haven't tried it yet)
-            // Note: gemini-pro is text-only, so it might fail with images if not gemini-pro-vision.
-            // Let's actually fallback to gemini-1.5-flash (no version) or gemini-pro-vision if available.
-            // For now, let's try a safer fallback if the user requested one, but gemini-pro doesn't support images in the same way.
-            // Let's try 'gemini-1.5-flash' (no suffix) as the fallback.
-
             console.log(`Attempting fallback to ${fallbackModelName}...`);
             const fallbackModel = genAI.getGenerativeModel({ model: fallbackModelName });
             result = await fallbackModel.generateContent([
@@ -112,7 +122,7 @@ Deno.serve(async (req) => {
 
         const responseText = result.response.text();
 
-        // Clean JSON (remove markdown code blocks if present)
+        // Clean JSON
         const jsonString = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
         let rawData;
 
@@ -123,62 +133,125 @@ Deno.serve(async (req) => {
             throw new Error(`AI returned invalid JSON: ${responseText.substring(0, 100)}...`);
         }
 
-        // 4. Validation Layer (Zod)
-        const validation = BillDataSchema.safeParse(rawData);
+        // Normalize to array
+        const items = Array.isArray(rawData.items) ? rawData.items : (Array.isArray(rawData) ? rawData : [rawData]);
 
-        let processedData = {
-            consumption: 0,
-            unit: 'unknown',
-            cost: 0,
-            date: new Date().toISOString().split('T')[0],
-            type: null as string | null,
-            status: 'needs_review',
-            confidence: 0.5
-        };
-
-        if (validation.success) {
-            processedData = {
-                ...validation.data,
-                status: 'verified',
-                confidence: 0.95
-            };
-        } else {
-            console.warn("Zod Validation Failed:", validation.error);
-            // We still save what we can, but flag it
-            processedData = { ...processedData, ...rawData, status: 'needs_review', confidence: 0.4 };
-        }
-
-        // 5. Math Layer (The Calculator)
-        let carbonEmission = 0;
-        if (processedData.type && EMISSION_FACTORS[processedData.type] && processedData.consumption) {
-            // Calculate tCO2e (Divide by 1000)
-            carbonEmission = (processedData.consumption * EMISSION_FACTORS[processedData.type]) / 1000;
-        }
-
-        // 6. Database Write
         const supabase = createClient(supabaseUrl, supabaseKey);
+        let totalCarbonEmission = 0;
+        let processedCount = 0;
+        let insertedRecords = [];
 
-        const { data, error } = await supabase
-            .from('emissions_log')
-            .insert({
-                user_id: userId,
-                bill_url: fileUrl,
-                source_type: processedData.type,
-                unit_type: processedData.unit,
-                consumption: processedData.consumption,
-                total_cost: processedData.cost,
-                bill_date: processedData.date,
-                carbon_emission: carbonEmission,
-                ai_confidence: processedData.confidence,
-                status: processedData.status,
-                raw_ai_response: rawData
-            })
-            .select()
-            .single();
+        // 6. Loop and Write
+        for (const item of items) {
+            // Validation
+            const validation = BillDataSchema.safeParse(item);
+            let processedData = {
+                consumption: 0,
+                unit: 'unknown',
+                cost: 0,
+                date: new Date().toISOString().split('T')[0],
+                type: null as string | null,
+                status: 'needs_review',
+                confidence: 0.5
+            };
 
-        if (error) throw error;
+            if (validation.success) {
+                processedData = {
+                    ...validation.data,
+                    status: 'verified',
+                    confidence: 0.95
+                };
+            } else {
+                processedData = { ...processedData, ...item, status: 'needs_review', confidence: 0.4 };
+            }
 
-        return new Response(JSON.stringify(data), {
+            // Unit Conversion
+            if (processedData.unit && processedData.unit.toLowerCase().includes('gallon')) {
+                processedData.consumption = processedData.consumption * 3.785; // Convert Gallons to Liters
+                processedData.unit = 'L';
+            }
+
+            // Calculation
+            let carbonEmission = 0;
+            if (processedData.type && EMISSION_FACTORS[processedData.type] && processedData.consumption) {
+                carbonEmission = (processedData.consumption * EMISSION_FACTORS[processedData.type]) / 1000;
+            }
+            totalCarbonEmission += carbonEmission;
+
+            // Database Write
+            const { data, error } = await supabase
+                .from('emissions_log')
+                .insert({
+                    user_id: userId,
+                    bill_url: fileUrl,
+                    source_type: processedData.type,
+                    unit_type: processedData.unit,
+                    consumption: processedData.consumption,
+                    total_cost: processedData.cost,
+                    bill_date: processedData.date,
+                    carbon_emission: carbonEmission,
+                    ai_confidence: processedData.confidence,
+                    status: processedData.status,
+                    raw_ai_response: item
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error("DB Insert Error:", error);
+                continue; // Skip failed inserts but try others
+            }
+            insertedRecords.push(data);
+            processedCount++;
+
+            // Anomaly Detection (Per Item)
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('organization_id')
+                    .eq('id', userId)
+                    .single();
+
+                if (profile?.organization_id && processedData.type && ANOMALY_THRESHOLDS[processedData.type]) {
+                    if (processedData.consumption > ANOMALY_THRESHOLDS[processedData.type]) {
+                        await supabase.from('anomaly_logs').insert({
+                            organization_id: profile.organization_id,
+                            source: processedData.type,
+                            anomaly: `High consumption detected: ${processedData.consumption} ${processedData.unit} (Threshold: ${ANOMALY_THRESHOLDS[processedData.type]})`,
+                            status: 'unresolved'
+                        });
+                        await supabase.from('live_feed').insert({
+                            organization_id: profile.organization_id,
+                            message: `Anomaly detected in ${processedData.type}: High consumption`,
+                            type: 'warning'
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Anomaly check failed", e);
+            }
+        }
+
+        // 7. Live Feed Summary
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('organization_id')
+                .eq('id', userId)
+                .single();
+
+            if (profile?.organization_id && processedCount > 0) {
+                await supabase.from('live_feed').insert({
+                    organization_id: profile.organization_id,
+                    message: `Processed bill with ${processedCount} items. Total: ${totalCarbonEmission.toFixed(2)} tCO2e`,
+                    type: 'success'
+                });
+            }
+        } catch (feedError) {
+            console.error("Failed to update live feed:", feedError);
+        }
+
+        return new Response(JSON.stringify({ success: true, records: insertedRecords }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 

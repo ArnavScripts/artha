@@ -53,7 +53,7 @@ export const profileService = {
             .update(updates)
             .eq('id', orgId)
             .select()
-            .single();
+            .maybeSingle();
 
         if (error) throw error;
         return data;
@@ -64,7 +64,7 @@ export const profileService = {
             .from('transactions')
             .insert(transaction as any)
             .select()
-            .single();
+            .maybeSingle();
 
         if (error) throw error;
         return data;

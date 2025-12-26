@@ -46,21 +46,69 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-// --- PHASE 4: BACKEND (Mock Data for Charts) ---
-const monthlyTrendData = [
-  { month: 'Jul', emissions: 1850, cost: 111000 },
-  { month: 'Aug', emissions: 1920, cost: 115200 },
-  { month: 'Sep', emissions: 1780, cost: 106800 },
-  { month: 'Oct', emissions: 2100, cost: 126000 },
-  { month: 'Nov', emissions: 1950, cost: 117000 },
-  { month: 'Dec', emissions: 1820, cost: 109200 },
-  { month: 'Jan', emissions: 1680, cost: 100800 },
-];
-
 export default function EmissionsTracker() {
   const { isSimpleView } = useWorkspace();
   const { records, anomalyLogs, liveFeed, isLoading, uploadRecord, isUploading } = useEmissions();
   const { analyzeEmissions, isAnalyzingEmissions } = useAI();
+
+  // Calculate Real Metrics
+  const { totalEmissions, thisMonthEmissions, totalCost, chartData } = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let total = 0;
+    let monthTotal = 0;
+    let cost = 0;
+    const monthlyAgg: Record<string, { emissions: number; cost: number; order: number }> = {};
+
+    records.forEach(r => {
+      const d = new Date(r.date);
+      const m = d.toLocaleString('default', { month: 'short' });
+      const key = `${m}`; // Just month name for chart
+
+      // Ensure carbon_emission and cost exist (handled in service, but safe check)
+      const emission = r.carbon_emission || 0;
+      const rCost = r.cost || 0;
+
+      total += emission;
+      cost += rCost;
+
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        monthTotal += emission;
+      }
+
+      if (!monthlyAgg[key]) {
+        monthlyAgg[key] = { emissions: 0, cost: 0, order: d.getMonth() };
+      }
+      monthlyAgg[key].emissions += emission;
+      monthlyAgg[key].cost += rCost;
+    });
+
+    // Sort by month order
+    const data = Object.entries(monthlyAgg)
+      .map(([month, val]) => ({
+        month,
+        emissions: val.emissions,
+        cost: val.cost,
+        order: val.order
+      }))
+      .sort((a, b) => a.order - b.order);
+
+    // If no data, provide a placeholder
+    const finalChartData = data.length > 0 ? data : [
+      { month: 'Jan', emissions: 0, cost: 0 },
+      { month: 'Feb', emissions: 0, cost: 0 },
+      { month: 'Mar', emissions: 0, cost: 0 }
+    ];
+
+    return {
+      totalEmissions: total,
+      thisMonthEmissions: monthTotal,
+      totalCost: cost,
+      chartData: finalChartData
+    };
+  }, [records]);
 
   // Simulator State
   const [showSimulator, setShowSimulator] = useState(false);
@@ -84,6 +132,61 @@ export default function EmissionsTracker() {
     );
   };
 
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  const sortedRecords = useMemo(() => {
+    let sortableRecords = [...records];
+    if (sortConfig !== null) {
+      sortableRecords.sort((a: any, b: any) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableRecords;
+  }, [records, sortConfig]);
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Source', 'Type', 'Value', 'Unit', 'Status', 'Date'];
+    const csvContent = [
+      headers.join(','),
+      ...sortedRecords.map(row => [
+        row.id,
+        `"${row.source}"`, // Quote strings
+        row.type,
+        row.value,
+        row.unit,
+        row.status,
+        row.date
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `emissions_data_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto mt-8">
@@ -101,12 +204,15 @@ export default function EmissionsTracker() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AISuggestionBanner
-          type={isSimpleView ? "info" : "warning"}
-          message={isSimpleView
-            ? "Summary: Emissions down 8% this month. On track for Q1 targets."
-            : "Anomaly Alert: Furnace B showing irregular readings at 2 PM. Check maintenance logs."
+          type={totalCost > 4000000 ? "warning" : (isSimpleView ? "info" : "warning")}
+          message={
+            totalCost > 4000000
+              ? `Warning: Carbon price rising. Optimization could save ₹${(totalCost * 0.1 / 100000).toFixed(1)}L annually.`
+              : (isSimpleView
+                ? "Summary: Emissions down 8% this month. On track for Q1 targets."
+                : "Anomaly Alert: Furnace B showing irregular readings at 2 PM. Check maintenance logs.")
           }
-          action={isSimpleView ? "View Details" : "Investigate"}
+          action={totalCost > 4000000 ? "Optimize Now" : (isSimpleView ? "View Details" : "Investigate")}
         />
 
         <div className="flex items-center justify-between mb-8">
@@ -145,7 +251,7 @@ export default function EmissionsTracker() {
                     <TrendingDown className="w-5 h-5 text-green-500" />
                   </div>
                 </div>
-                <p className="text-4xl font-bold text-foreground font-mono tracking-tight">12,450</p>
+                <p className="text-4xl font-bold text-foreground font-mono tracking-tight">{totalEmissions.toFixed(1)}</p>
                 <p className="text-sm text-muted-foreground mt-1">tCO2e</p>
                 <div className="mt-4 flex items-center gap-2 text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded w-fit">
                   <TrendingDown className="w-3 h-3" /> 8% vs last year
@@ -162,7 +268,7 @@ export default function EmissionsTracker() {
                     <Activity className="w-5 h-5 text-cyan-500" />
                   </div>
                 </div>
-                <p className="text-4xl font-bold text-foreground font-mono tracking-tight">1,680</p>
+                <p className="text-4xl font-bold text-foreground font-mono tracking-tight">{thisMonthEmissions.toFixed(1)}</p>
                 <p className="text-sm text-muted-foreground mt-1">tCO2e</p>
                 <div className="mt-4 flex items-center gap-2 text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded w-fit">
                   <TrendingDown className="w-3 h-3" /> 7% vs Dec
@@ -179,7 +285,7 @@ export default function EmissionsTracker() {
                     <DollarSign className="w-5 h-5 text-amber-500" />
                   </div>
                 </div>
-                <p className="text-4xl font-bold text-foreground font-mono tracking-tight">₹7.4L</p>
+                <p className="text-4xl font-bold text-foreground font-mono tracking-tight">₹{(totalCost / 1000).toFixed(1)}k</p>
                 <p className="text-sm text-muted-foreground mt-1">Liability</p>
                 <div className="mt-4 flex items-center gap-2 text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded w-fit">
                   <TrendingUp className="w-3 h-3" /> 2% vs last month
@@ -212,7 +318,7 @@ export default function EmissionsTracker() {
 
               <div className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={monthlyTrendData}>
+                  <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorEmissions" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
@@ -342,21 +448,38 @@ export default function EmissionsTracker() {
                     <FileSpreadsheet className="w-4 h-4 text-cyan-500" />
                     <span className="text-sm font-medium text-white">Emissions Data</span>
                   </div>
-                  <span className="text-xs text-slate-500 font-mono bg-white/5 px-2 py-1 rounded">{records.length} records</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-slate-500 font-mono bg-white/5 px-2 py-1 rounded">{records.length} records</span>
+                    <Button variant="outline" size="sm" className="h-7 text-xs border-white/10 hover:bg-white/5" onClick={handleExportCSV}>
+                      Export CSV
+                    </Button>
+                  </div>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-white/5">
-                      <TableHead className="text-xs font-medium uppercase text-slate-500">ID</TableHead>
-                      <TableHead className="text-xs font-medium uppercase text-slate-500">Source</TableHead>
-                      <TableHead className="text-xs font-medium uppercase text-slate-500">Type</TableHead>
-                      <TableHead className="text-xs font-medium uppercase text-right text-slate-500">Value</TableHead>
-                      <TableHead className="text-xs font-medium uppercase text-slate-500">Status</TableHead>
-                      <TableHead className="text-xs font-medium uppercase text-slate-500">Date</TableHead>
+                      <TableHead className="text-xs font-medium uppercase text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => requestSort('id')}>
+                        ID {sortConfig?.key === 'id' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </TableHead>
+                      <TableHead className="text-xs font-medium uppercase text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => requestSort('source')}>
+                        Source {sortConfig?.key === 'source' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </TableHead>
+                      <TableHead className="text-xs font-medium uppercase text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => requestSort('type')}>
+                        Type {sortConfig?.key === 'type' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </TableHead>
+                      <TableHead className="text-xs font-medium uppercase text-right text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => requestSort('value')}>
+                        Value {sortConfig?.key === 'value' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </TableHead>
+                      <TableHead className="text-xs font-medium uppercase text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => requestSort('status')}>
+                        Status {sortConfig?.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </TableHead>
+                      <TableHead className="text-xs font-medium uppercase text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => requestSort('date')}>
+                        Date {sortConfig?.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {records.map((row) => (
+                    {sortedRecords.map((row) => (
                       <TableRow key={row.id} className="font-mono text-sm border-white/5 hover:bg-white/5 transition-colors">
                         <TableCell className="text-slate-500">{row.id}</TableCell>
                         <TableCell className="font-sans font-medium text-slate-300">{row.source}</TableCell>
@@ -528,7 +651,17 @@ export default function EmissionsTracker() {
                     <div>
                       <div className="flex justify-between mb-2">
                         <label className="text-sm font-medium text-slate-300">Energy Efficiency</label>
-                        <span className="text-sm font-mono text-purple-400">{efficiency}%</span>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={efficiency}
+                            onChange={(e) => setEfficiency(Math.min(100, Math.max(0, Number(e.target.value))))}
+                            className="w-12 h-6 bg-slate-800 border border-white/10 rounded text-center text-xs font-mono text-purple-400 focus:outline-none focus:border-purple-500"
+                          />
+                          <span className="text-sm font-mono text-purple-400">%</span>
+                        </div>
                       </div>
                       <input
                         type="range"
@@ -545,11 +678,13 @@ export default function EmissionsTracker() {
                     <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Projected Impact</p>
                     <div className="flex items-baseline gap-2">
                       <p className="text-3xl font-bold font-mono text-white">
-                        {((productionOutput * 0.8 - energyMix * 0.2 - efficiency * 0.3) * 100).toFixed(0)}
+                        {(totalEmissions * (1 - efficiency / 100)).toFixed(1)}
                       </p>
                       <span className="text-sm text-slate-500">tCO2e</span>
                     </div>
-                    <p className="text-sm text-slate-400 mt-1">Monthly emissions estimate based on current parameters.</p>
+                    <p className="text-sm text-slate-400 mt-1">
+                      Estimated emissions based on {efficiency}% efficiency improvement.
+                    </p>
                   </div>
 
                   <Button
