@@ -16,7 +16,7 @@ export default function LandingPage() {
     const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
     return (
-        <div className="min-h-screen bg-[#0B1120] text-white overflow-hidden font-sans selection:bg-cyan-500/30">
+        <div className="min-h-screen bg-[#0B1120] text-white font-sans selection:bg-cyan-500/30">
             {/* Aurora Borealis Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse" />

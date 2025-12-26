@@ -263,17 +263,17 @@
   }
 
   html {
-    @apply h-full overflow-hidden;
+    @apply min-h-full;
   }
 
   body {
-    @apply h-full bg-background text-foreground antialiased overflow-hidden;
+    @apply min-h-full bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     transition: background-color 0.5s ease, color 0.3s ease;
   }
 
   #root {
-    @apply h-full;
+    @apply min-h-full;
   }
 
   /* ARTHA Typography System */
