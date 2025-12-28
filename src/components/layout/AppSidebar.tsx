@@ -151,11 +151,12 @@ function SidebarNavContent({ className = '' }: { className?: string }) {
       {/* Command Center Footer */}
       <div className="p-3 space-y-1">
         {/* User Profile */}
+        {/* User Profile - Redirects to Settings for now */}
         <NavLink
-          to="/profile"
+          to="/settings"
           className="relative flex items-center w-full px-3 py-2.5 rounded-lg transition-colors group"
         >
-          {location.pathname === '/profile' && (
+          {location.pathname === '/settings' && (
             <motion.div
               layoutId="active-pill-profile"
               className="absolute inset-0 rounded-lg bg-cyan-500/10 dark:bg-cyan-500/10 border-r-2 border-cyan-400"
@@ -167,11 +168,11 @@ function SidebarNavContent({ className = '' }: { className?: string }) {
               }}
             />
           )}
-          <div className={`relative z-10 flex items-center gap-3 ${location.pathname === '/profile'
+          <div className={`relative z-10 flex items-center gap-3 ${location.pathname === '/settings'
             ? 'text-cyan-700 dark:text-cyan-400'
             : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300'
             }`}>
-            <User className={`w-5 h-5 ${location.pathname === '/profile' ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} />
+            <User className={`w-5 h-5 ${location.pathname === '/settings' ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} />
             <span className="font-medium text-sm">Profile</span>
           </div>
         </NavLink>

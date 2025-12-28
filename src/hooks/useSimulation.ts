@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useProfile } from './useProfile';
 
 export interface Scenario {
     id: string;
@@ -31,10 +32,58 @@ export function useSimulation() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSimulating, setIsSimulating] = useState(false);
 
+    const { user } = useProfile();
+    const isDemoUser = user?.email === 'demo@artha.com';
+
     // Initialize or Fetch Active Scenario
     useEffect(() => {
+        if (isDemoUser) {
+            setScenario({
+                id: 'demo-scenario',
+                name: 'Strategic Decarbonization Plan 2024',
+                baseline_cost: 8500000
+            });
+            setInterventions([
+                {
+                    id: '1',
+                    title: 'Solar Microgrid Integration',
+                    impact_description: 'Replace 40% of grid dependency with on-site solar.',
+                    capex_cost: 12000000,
+                    npv_value: 45000000,
+                    reduction_percentage: 25,
+                    is_applied: true
+                },
+                {
+                    id: '2',
+                    title: 'EV Fleet Transition',
+                    impact_description: 'Convert logistics fleet to electric vehicles.',
+                    capex_cost: 8500000,
+                    npv_value: 15000000,
+                    reduction_percentage: 12,
+                    is_applied: false
+                },
+                {
+                    id: '3',
+                    title: 'AI-Driven HVAC Optimization',
+                    impact_description: 'Real-time thermal management using SAGE AI.',
+                    capex_cost: 1500000,
+                    npv_value: 8000000,
+                    reduction_percentage: 8,
+                    is_applied: false
+                }
+            ]);
+            setProjections([
+                { month: '2024-01-01', bau_value: 850000, optimized_value: 800000 },
+                { month: '2024-02-01', bau_value: 870000, optimized_value: 780000 },
+                { month: '2024-03-01', bau_value: 890000, optimized_value: 750000 },
+                { month: '2024-04-01', bau_value: 920000, optimized_value: 720000 },
+                { month: '2024-05-01', bau_value: 950000, optimized_value: 680000 },
+                { month: '2024-06-01', bau_value: 980000, optimized_value: 650000 },
+            ]);
+            return;
+        }
         fetchScenario();
-    }, []);
+    }, [isDemoUser]);
 
     async function fetchScenario() {
         setIsLoading(true);

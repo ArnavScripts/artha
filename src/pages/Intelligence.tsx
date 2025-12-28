@@ -86,14 +86,6 @@ export default function Intelligence() {
           </div>
           <div className="flex items-center gap-3">
             <Button
-              variant="outline"
-              className="border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-800"
-              onClick={handleOpenSage}
-            >
-              <Bot className="w-4 h-4 mr-2" />
-              Open SAGE Command
-            </Button>
-            <Button
               className="bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20"
               onClick={handleNewSimulation}
             >

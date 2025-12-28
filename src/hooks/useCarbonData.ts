@@ -3,7 +3,20 @@ import { emissionsService, EmissionRecord } from '@/services/emissions.service';
 import { useProfile } from './useProfile';
 
 export function useCarbonData() {
-    const { organization } = useProfile();
+    const { user, organization, isLoading: isProfileLoading } = useProfile();
+    const isDemoUser = user?.email === 'demo@artha.com';
+
+    if (isProfileLoading) {
+        return {
+            records: [],
+            liability: { scope1: 0, scope2: 0, scope3: 0, total: 0 },
+            balance: 0,
+            cap: 0,
+            purchased: 0,
+            forecast: [],
+            isLoading: true
+        };
+    }
 
     const recordsQuery = useQuery({
         queryKey: ['emissions-records'],
@@ -35,6 +48,41 @@ export function useCarbonData() {
     const cap = getCap(organization?.tier);
     const purchased = organization?.credits_purchased || 0;
     const balance = (cap + purchased) - totalLiability;
+
+    console.log('useCarbonData check:', { email: user?.email, isDemoUser });
+
+    if (isDemoUser) {
+        const demoLiability = {
+            scope1: 1250000,
+            scope2: 850000,
+            scope3: 450000,
+            total: 2550000
+        };
+        const demoCap = 5000000;
+        const demoPurchased = 150000;
+        const demoBalance = (demoCap + demoPurchased) - demoLiability.total;
+
+        return {
+            records: [
+                { id: '1', type: 'Scope 1', source: 'Manufacturing', carbon_emission: 1250000, date: '2023-12-01' },
+                { id: '2', type: 'Scope 2', source: 'Electricity', carbon_emission: 850000, date: '2023-12-01' },
+                { id: '3', type: 'Scope 3', source: 'Logistics', carbon_emission: 450000, date: '2023-12-01' },
+            ] as EmissionRecord[],
+            liability: demoLiability,
+            balance: demoBalance,
+            cap: demoCap,
+            purchased: demoPurchased,
+            forecast: [
+                { month: 'Jan', actual: 2100000, projected: 2200000 },
+                { month: 'Feb', actual: 2300000, projected: 2250000 },
+                { month: 'Mar', actual: 2400000, projected: 2300000 },
+                { month: 'Apr', actual: null, projected: 2450000 },
+                { month: 'May', actual: null, projected: 2500000 },
+                { month: 'Jun', actual: null, projected: 2600000 },
+            ],
+            isLoading: false,
+        };
+    }
 
     return {
         records,

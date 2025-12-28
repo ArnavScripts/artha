@@ -55,7 +55,7 @@ export default function Login() {
                         "Artha has transformed how we manage our environmental impact. It's not just a tool, it's our financial terminal for carbon."
                     </p>
                 </div>
-                <p className="text-sm text-slate-500 relative z-10">© 2024 Artha Inc.</p>
+                <p className="text-sm text-slate-500 relative z-10">© 2024 CarbonTerminal</p>
             </div>
 
             {/* Right Side - Form */}

@@ -72,15 +72,10 @@ export default function LandingPage() {
                         </p>
 
                         <div className="flex items-center justify-center gap-4 mb-24">
-                            <Link to="/register">
+                            <Link to="/login">
                                 <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-cyan-500 hover:bg-cyan-400 text-white shadow-[0_0_40px_-10px_rgba(6,182,212,0.5)] border-0 relative overflow-hidden group">
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-[100%] group-hover:animate-[shimmer_2s_infinite]" />
                                     <span className="relative z-10 flex items-center">Start Terminal <ArrowRight className="w-5 h-5 ml-2" /></span>
-                                </Button>
-                            </Link>
-                            <Link to="/login">
-                                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
-                                    Live Demo
                                 </Button>
                             </Link>
                         </div>
@@ -114,20 +109,6 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Social Proof */}
-            <section className="py-12 border-y border-white/5 bg-white/[0.02]">
-                <div className="max-w-7xl mx-auto px-6">
-                    <p className="text-center text-sm font-mono text-slate-500 mb-8 uppercase tracking-widest">Trusted by Industrial Giants</p>
-                    <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-40 grayscale mix-blend-screen">
-                        {/* Replace with actual SVGs in production */}
-                        <h3 className="text-2xl font-bold text-white">TATA STEEL</h3>
-                        <h3 className="text-2xl font-bold text-white">JSW</h3>
-                        <h3 className="text-2xl font-bold text-white">RELIANCE</h3>
-                        <h3 className="text-2xl font-bold text-white">ADANI</h3>
-                        <h3 className="text-2xl font-bold text-white">VEDANTA</h3>
-                    </div>
-                </div>
-            </section>
 
             {/* Features Grid */}
             <section className="py-32 px-6 relative">

@@ -29,14 +29,53 @@ export default function Wallet() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [expandedTx, setExpandedTx] = useState<string | null>(null);
 
+    const { user } = useProfile();
+    const isDemoUser = user?.email === 'demo@artha.com';
+
     // Fetch all transactions
     const { data: transactions } = useQuery({
         queryKey: ['transactions', organization?.id],
         queryFn: async () => {
+            if (isDemoUser) {
+                return [
+                    {
+                        id: 'tx-1',
+                        type: 'deposit',
+                        amount: 500000,
+                        credits: 8333.33,
+                        status: 'completed',
+                        created_at: subMonths(new Date(), 0).toISOString()
+                    },
+                    {
+                        id: 'tx-2',
+                        type: 'withdraw',
+                        amount: 120000,
+                        credits: 2000,
+                        status: 'completed',
+                        created_at: subMonths(new Date(), 1).toISOString()
+                    },
+                    {
+                        id: 'tx-3',
+                        type: 'deposit',
+                        amount: 300000,
+                        credits: 5000,
+                        status: 'completed',
+                        created_at: subMonths(new Date(), 2).toISOString()
+                    },
+                    {
+                        id: 'tx-4',
+                        type: 'deposit',
+                        amount: 450000,
+                        credits: 7500,
+                        status: 'completed',
+                        created_at: subMonths(new Date(), 3).toISOString()
+                    }
+                ];
+            }
             if (!organization) return [];
             return profileService.getTransactions(organization.id);
         },
-        enabled: !!organization,
+        enabled: !!organization || isDemoUser,
     });
 
     // --- PHASE 3: DESIGN (Holographic Physics) ---
@@ -117,8 +156,6 @@ export default function Wallet() {
         }
     };
 
-    if (isLoading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-cyan-500" /></div>;
-
     // Fetch audits
     const { data: audits } = useQuery({
         queryKey: ['audits', organization?.id],
@@ -173,6 +210,8 @@ export default function Wallet() {
             { name: 'Fees', value: totalPurchased * 0.02, color: '#6366f1' },     // Indigo (2% est)
         ];
     }, [transactions, liability, audits]);
+
+    if (isLoading) return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-cyan-500" /></div>;
 
     return (
         <>

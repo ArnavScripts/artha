@@ -20,6 +20,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Progress } from '@/components/ui/progress';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAI } from '@/hooks/useAI';
+import { useProfile } from '@/hooks/useProfile';
 import { DashboardSkeleton } from '@/components/loading/DashboardSkeleton';
 import { toast } from 'sonner';
 
@@ -65,6 +66,8 @@ export default function CarbonDashboard() {
   const { isSimpleView } = useWorkspace();
   const { checklist, audits, dataGaps, isLoading } = useDashboard();
   const { getTradeRecommendation, isAnalyzingTrade } = useAI();
+  const { profile } = useProfile();
+  const isDemoUser = profile?.email === 'demo@artha.com';
 
   const handleAutoHedge = () => {
     toast.info("AI Analyst is analyzing market conditions...");
@@ -89,6 +92,17 @@ export default function CarbonDashboard() {
     );
   }
 
+
+  const suggestionMessage = isDemoUser
+    ? "AI Insight: Switch to renewable energy provider 'GreenPower' to reduce Scope 2 emissions by 15% and save ₹12L annually."
+    : isSimpleView
+      ? "Warning: Carbon price rising. Auto-hedge recommended to save ₹4.2L this quarter."
+      : "Alert: 3 data gaps detected. Audit deadline in 5 days. Immediate action required.";
+
+  const suggestionAction = isDemoUser
+    ? "Apply Recommendation"
+    : isSimpleView ? "Enable Auto-Hedge" : "View Data Gaps";
+
   return (
     <>
       <Helmet>
@@ -98,12 +112,9 @@ export default function CarbonDashboard() {
 
       <div className="max-w-7xl mx-auto">
         <AISuggestionBanner
-          type="warning"
-          message={isSimpleView
-            ? "Warning: Carbon price rising. Auto-hedge recommended to save ₹4.2L this quarter."
-            : "Alert: 3 data gaps detected. Audit deadline in 5 days. Immediate action required."
-          }
-          action={isSimpleView ? "Enable Auto-Hedge" : "View Data Gaps"}
+          type={isDemoUser ? "suggestion" : "warning"}
+          message={suggestionMessage}
+          action={suggestionAction}
           onAction={isSimpleView ? handleAutoHedge : undefined}
           isLoading={isAnalyzingTrade}
         />
