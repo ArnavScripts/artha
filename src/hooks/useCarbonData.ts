@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { emissionsService, EmissionRecord } from '@/services/emissions.service';
 import { useProfile } from './useProfile';
+import { subMonths } from 'date-fns';
 
 export function useCarbonData() {
     const { user, organization, isLoading: isProfileLoading } = useProfile();
@@ -52,33 +53,42 @@ export function useCarbonData() {
     console.log('useCarbonData check:', { email: user?.email, isDemoUser });
 
     if (isDemoUser) {
+        const now = new Date();
+        const currentMonth = now.toISOString().split('T')[0].substring(0, 7);
+        const prevMonth1 = subMonths(now, 1).toLocaleString('default', { month: 'short' });
+        const prevMonth2 = subMonths(now, 2).toLocaleString('default', { month: 'short' });
+        const nextMonth1 = now.toLocaleString('default', { month: 'short' }); // Current month as first forecast
+        const nextMonth2 = subMonths(now, -1).toLocaleString('default', { month: 'short' });
+        const nextMonth3 = subMonths(now, -2).toLocaleString('default', { month: 'short' });
+
         const demoLiability = {
-            scope1: 1250000,
-            scope2: 850000,
-            scope3: 450000,
-            total: 2550000
+            scope1: 16502.2,
+            scope2: 4801.2,
+            scope3: 4251.2,
+            total: 25554.6
         };
-        const demoCap = 5000000;
+        const demoCap = 125000; // Enterprise Cap
         const demoPurchased = 150000;
         const demoBalance = (demoCap + demoPurchased) - demoLiability.total;
 
         return {
             records: [
-                { id: '1', type: 'Scope 1', source: 'Manufacturing', carbon_emission: 1250000, date: '2023-12-01' },
-                { id: '2', type: 'Scope 2', source: 'Electricity', carbon_emission: 850000, date: '2023-12-01' },
-                { id: '3', type: 'Scope 3', source: 'Logistics', carbon_emission: 450000, date: '2023-12-01' },
+                { id: '1', type: 'Scope 1', source: 'Manufacturing (Furnaces)', carbon_emission: 13400, date: `${currentMonth}-15` },
+                { id: '2', type: 'Scope 1', source: 'Logistics & Steam', carbon_emission: 3102, date: `${currentMonth}-12` },
+                { id: '3', type: 'Scope 2', source: 'Grid & Utilities', carbon_emission: 4801, date: `${currentMonth}-14` },
+                { id: '4', type: 'Scope 3', source: 'Supply Chain & Travel', carbon_emission: 4251, date: `${currentMonth}-20` },
             ] as EmissionRecord[],
             liability: demoLiability,
             balance: demoBalance,
             cap: demoCap,
             purchased: demoPurchased,
             forecast: [
-                { month: 'Jan', actual: 2100000, projected: 2200000 },
-                { month: 'Feb', actual: 2300000, projected: 2250000 },
-                { month: 'Mar', actual: 2400000, projected: 2300000 },
-                { month: 'Apr', actual: null, projected: 2450000 },
-                { month: 'May', actual: null, projected: 2500000 },
-                { month: 'Jun', actual: null, projected: 2600000 },
+                { month: prevMonth2, actual: 21000, projected: 22000 },
+                { month: prevMonth1, actual: 23000, projected: 22500 },
+                { month: nextMonth1, actual: 24000, projected: 23000 },
+                { month: nextMonth2, actual: null, projected: 24500 },
+                { month: nextMonth3, actual: null, projected: 25000 },
+                { month: 'Jul', actual: null, projected: 26000 },
             ],
             isLoading: false,
         };
