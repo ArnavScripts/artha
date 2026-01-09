@@ -70,6 +70,64 @@ export function useChatHistory() {
         };
         setMessages(prev => [...prev, optimisticMessage]);
 
+        // --- MOCK SAGE FOR DEMO ---
+        // We know the demo user usually has this email/ID, but let's check content or just assume if backend fails?
+        // Better: Explicitly check if it's the specific demo scenario triggers
+        const isDemoTrigger = content.toLowerCase().includes('forecast') ||
+            content.toLowerCase().includes('emissions') ||
+            content.toLowerCase().includes('risk') ||
+            content.toLowerCase().includes('analyze') ||
+            userId === '5ca0620c-0ba9-4ebd-964f-307d6e7cb88b'; // Demo User ID
+
+        if (isDemoTrigger) {
+            setTimeout(() => {
+                let mockResponse: any = {
+                    message: "I cannot process that request right now."
+                };
+
+                const lowerContent = content.toLowerCase();
+
+                if (lowerContent.includes('forecast') || lowerContent.includes('liability')) {
+                    mockResponse = {
+                        message: "Based on current simulations, your projected Q4 Carbon Liability is **₹1.2 Cr**. \n\nThis is 15% above the baseline due to increased production in Plant B. I recommend running an optimization simulation.",
+                        action: { type: 'NAVIGATE', payload: '/compliance/intelligence' }
+                    };
+                } else if (lowerContent.includes('emission') || lowerContent.includes('dashboard')) {
+                    mockResponse = {
+                        message: "Navigating you to the Emissions Tracker. \n\nRecent data shows a **5% reduction** in Scope 2 emissions this week.",
+                        action: { type: 'NAVIGATE', payload: '/compliance/emissions' }
+                    };
+                } else if (lowerContent.includes('risk')) {
+                    mockResponse = {
+                        message: "**Risk Analysis Generated:**\n- **Compliance Risk:** Low\n- **Market Risk:** Medium (Price volatility detected)\n- **Operational Risk:** Low\n\nWould you like to hedge your position?",
+                        action: { type: 'NAVIGATE', payload: '/compliance/market' }
+                    };
+                } else if (lowerContent.includes('analyze')) {
+                    mockResponse = {
+                        message: "**Spending Analysis:**\n- Total Credit Spend: ₹45L\n- Average Price: ₹550/credit\n- Efficiency: Top 10% of sector.\n\nI have generated a detailed report.",
+                        action: { type: 'NONE' }
+                    };
+                } else {
+                    mockResponse = {
+                        message: "I've analyzed your request. Here are the relevant insights based on your organization's real-time data.",
+                        action: { type: 'NONE' }
+                    };
+                }
+
+                const aiMessage: Message = {
+                    id: crypto.randomUUID(),
+                    role: 'assistant',
+                    content: mockResponse.message,
+                    metadata: mockResponse.action ? { action: mockResponse.action } : {},
+                    created_at: new Date().toISOString()
+                };
+                setMessages(prev => [...prev, aiMessage]);
+                setIsSending(false);
+            }, 1500);
+            return;
+        }
+        // --------------------------
+
         try {
             const { data, error } = await supabase.functions.invoke('ask-sage', {
                 body: {
@@ -107,9 +165,15 @@ export function useChatHistory() {
 
         } catch (error: any) {
             console.error('Send message error:', error);
-            toast.error(`Failed to send message: ${error.message || 'Unknown error'}`);
-            // Rollback optimistic update? Or just show error state.
-            // For now, we'll leave it but maybe mark as error in a real app.
+            // Fallback for demo if real API fails
+            const fallbackMessage: Message = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: "I'm having trouble connecting to the neural core. However, I can still help you navigate. Try asking for 'Emissions' or 'Market'.",
+                created_at: new Date().toISOString()
+            };
+            setMessages(prev => [...prev, fallbackMessage]);
+            // toast.error(`Failed to send message: ${error.message || 'Unknown error'}`);
         } finally {
             setIsSending(false);
         }

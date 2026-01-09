@@ -24,19 +24,21 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 
 const carbonNavItems = [
-  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Wallet & Treasury', url: '/wallet', icon: Wallet },
-  { title: 'Emissions (Live)', url: '/emissions', icon: Activity },
-  { title: 'Market (Trading)', url: '/market', icon: TrendingUp },
-  { title: 'Regulatory', url: '/regulatory', icon: Landmark },
-  { title: 'Intelligence', url: '/intelligence', icon: BrainCircuit },
+  { title: 'Dashboard', url: '/compliance/dashboard', icon: LayoutDashboard },
+  { title: 'Emissions (Live)', url: '/compliance/emissions', icon: Activity },
+  { title: 'Market (Trading)', url: '/compliance/market', icon: TrendingUp },
+  { title: 'Compliance Reports', url: '/compliance/reports', icon: ShieldCheck },
+  { title: 'Regulatory Registry', url: '/compliance/registry', icon: Landmark },
+  { title: 'Intelligence', url: '/compliance/intelligence', icon: BrainCircuit },
+  { title: 'Auditor Portal', url: '/auditor/dashboard', icon: ShieldCheck },
 ];
 
 const greenNavItems = [
-  { title: 'Impact Dashboard', url: '/green', icon: TreeDeciduous },
-  { title: 'Marketplace', url: '/green/marketplace', icon: Store },
-  { title: 'Portfolio', url: '/green/portfolio', icon: Wallet },
-  { title: 'Verification', url: '/green/verification', icon: ShieldCheck },
+  { title: 'Impact Dashboard', url: '/voluntary/dashboard', icon: TreeDeciduous },
+  { title: 'Marketplace', url: '/voluntary/market', icon: Store },
+  { title: 'Portfolio', url: '/voluntary/portfolio', icon: Wallet },
+  { title: 'Verification', url: '/voluntary/verification', icon: ShieldCheck },
+  { title: 'Wallet', url: '/wallet', icon: Wallet },
 ];
 
 // Shared navigation content component
@@ -48,10 +50,7 @@ function SidebarNavContent({ className = '' }: { className?: string }) {
   const navItems = mode === 'carbon' ? carbonNavItems : greenNavItems;
 
   const isActive = (item: typeof navItems[0]) => {
-    if (item.url === '/green') {
-      return location.pathname === item.url;
-    }
-    return location.pathname.startsWith(item.url);
+    return location.pathname === item.url;
   };
 
   return (

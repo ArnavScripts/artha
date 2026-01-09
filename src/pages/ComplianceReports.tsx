@@ -1,10 +1,10 @@
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { 
-  FileText, 
-  Globe, 
-  Shield, 
-  Download, 
+import {
+  FileText,
+  Globe,
+  Shield,
+  Download,
   ChevronRight,
   CheckCircle2,
   Clock,
@@ -74,7 +74,7 @@ export default function ComplianceReports() {
                 className="carbon-card p-6 hover:shadow-lg transition-shadow"
               >
                 <div className={`w-12 h-12 rounded-xl ${card.color} flex items-center justify-center mb-4`}>
-                  <Icon className="w-6 h-6 text-white" />
+                  <Icon className="w-6 h-6 text-black" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">{card.title}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{card.description}</p>
@@ -92,11 +92,10 @@ export default function ComplianceReports() {
                       </>
                     )}
                   </div>
-                  <button className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    card.status === 'ready' 
-                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                  <button className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${card.status === 'ready'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                       : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                  }`}>
+                    }`}>
                     {card.action}
                     {card.status === 'ready' && <Download className="w-4 h-4" />}
                   </button>
@@ -114,9 +113,8 @@ export default function ComplianceReports() {
           <div className="space-y-0">
             {complianceTimeline.map((item, index) => (
               <div key={index} className="flex items-start gap-4 py-4 border-b border-border last:border-0">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  item.status === 'complete' ? 'bg-carbon-success-light' : 'bg-carbon-warning-light'
-                }`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${item.status === 'complete' ? 'bg-carbon-success-light' : 'bg-carbon-warning-light'
+                  }`}>
                   {item.status === 'complete' ? (
                     <CheckCircle2 className="w-5 h-5 text-carbon-success" />
                   ) : (

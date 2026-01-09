@@ -1,8 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  Clock, 
+import {
+  ShieldCheck,
+  Clock,
   CheckCircle2,
   AlertCircle,
   FileSearch,
@@ -20,23 +20,23 @@ const verificationProjects = [
     name: 'Western Ghats Reforestation',
     standard: 'Verra VCS',
     status: 'in_progress',
-    progress: 75,
+    progress: 85,
     stage: 'Third-Party Audit',
-    estimatedCredits: 8000,
-    startDate: '15 Oct 2024',
-    expectedCompletion: '15 Mar 2025',
+    estimatedCredits: 15000,
+    startDate: '15 Oct 2025',
+    expectedCompletion: '15 Mar 2026',
     auditor: 'RINA India'
   },
   {
     id: 2,
-    name: 'Gujarat Wind Farm',
+    name: 'Gujarat Wind Farm Ph-2',
     standard: 'Gold Standard',
     status: 'pending',
-    progress: 30,
-    stage: 'Documentation Review',
-    estimatedCredits: 12000,
-    startDate: '01 Dec 2024',
-    expectedCompletion: '01 Jun 2025',
+    progress: 45,
+    stage: 'Validation',
+    estimatedCredits: 25000,
+    startDate: '01 Jan 2026',
+    expectedCompletion: '01 Jun 2026',
     auditor: 'TÜV SÜD'
   },
   {
@@ -46,11 +46,23 @@ const verificationProjects = [
     status: 'completed',
     progress: 100,
     stage: 'Credits Issued',
-    estimatedCredits: 3500,
-    startDate: '01 Jun 2024',
-    expectedCompletion: '15 Nov 2024',
+    estimatedCredits: 5500,
+    startDate: '01 Jun 2025',
+    expectedCompletion: '15 Nov 2025',
     auditor: 'DNV GL'
   },
+  {
+    id: 4,
+    name: 'Assam Solar Grid Integration',
+    standard: 'I-REC',
+    status: 'pending',
+    progress: 15,
+    stage: 'Project Design',
+    estimatedCredits: 12000,
+    startDate: '01 Feb 2026',
+    expectedCompletion: '01 Aug 2026',
+    auditor: 'Pending'
+  }
 ];
 
 const gcpStages = [
@@ -89,9 +101,10 @@ export default function GreenVerification() {
             </Button>
           </div>
 
-          <AISuggestionBanner 
+          <AISuggestionBanner
             message="Western Ghats project audit scheduled for next week. Ensure all monitoring data is uploaded."
             type="info"
+            action="View Schedule"
           />
 
           {/* GCP Stage Overview */}
@@ -101,14 +114,13 @@ export default function GreenVerification() {
               {gcpStages.map((stage, index) => (
                 <div key={stage.name} className="flex items-center">
                   <div className="text-center">
-                    <div 
-                      className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 ${
-                        stage.status === 'completed' 
-                          ? 'bg-green-primary text-white' 
-                          : stage.status === 'in_progress'
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 ${stage.status === 'completed'
+                        ? 'bg-green-primary text-white'
+                        : stage.status === 'in_progress'
                           ? 'bg-green-solar text-white'
                           : 'bg-muted text-muted-foreground'
-                      }`}
+                        }`}
                     >
                       {stage.status === 'completed' ? (
                         <CheckCircle2 className="w-5 h-5" />
@@ -121,9 +133,8 @@ export default function GreenVerification() {
                     <p className="text-xs text-muted-foreground max-w-[80px]">{stage.name}</p>
                   </div>
                   {index < gcpStages.length - 1 && (
-                    <div className={`w-12 h-0.5 mx-2 ${
-                      stage.status === 'completed' ? 'bg-green-primary' : 'bg-muted'
-                    }`} />
+                    <div className={`w-12 h-0.5 mx-2 ${stage.status === 'completed' ? 'bg-green-primary' : 'bg-muted'
+                      }`} />
                   )}
                 </div>
               ))}
@@ -141,17 +152,17 @@ export default function GreenVerification() {
                   <div>
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold text-foreground">{project.name}</h3>
-                      <Badge 
+                      <Badge
                         className={
-                          project.status === 'completed' 
-                            ? 'bg-green-primary-light text-green-primary border-green-primary/20' 
+                          project.status === 'completed'
+                            ? 'bg-green-primary-light text-green-primary border-green-primary/20'
                             : project.status === 'in_progress'
-                            ? 'bg-green-solar-light text-green-solar border-green-solar/20'
-                            : 'bg-muted text-muted-foreground'
+                              ? 'bg-green-solar-light text-green-solar border-green-solar/20'
+                              : 'bg-muted text-muted-foreground'
                         }
                       >
-                        {project.status === 'completed' ? 'Verified' : 
-                         project.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                        {project.status === 'completed' ? 'Verified' :
+                          project.status === 'in_progress' ? 'In Progress' : 'Pending'}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
@@ -192,13 +203,12 @@ export default function GreenVerification() {
                     <span className="text-muted-foreground">Verification Progress</span>
                     <span className="font-mono text-foreground">{project.progress}%</span>
                   </div>
-                  <Progress 
-                    value={project.progress} 
-                    className={`h-2 ${
-                      project.status === 'completed' 
-                        ? '[&>div]:bg-green-primary' 
-                        : '[&>div]:bg-green-solar'
-                    }`}
+                  <Progress
+                    value={project.progress}
+                    className={`h-2 ${project.status === 'completed'
+                      ? '[&>div]:bg-green-primary'
+                      : '[&>div]:bg-green-solar'
+                      }`}
                   />
                 </div>
               </div>

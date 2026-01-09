@@ -101,11 +101,34 @@ export default function Login() {
                         </Button>
                     </form>
 
+                    {/* Sign Up Link */}
                     <div className="text-center text-sm">
                         Don't have an account?{' '}
                         <Link to="/register" className="text-primary font-medium hover:underline">
                             Start free trial
                         </Link>
+                    </div>
+
+                    {/* DEMO MODE SHORTCUT */}
+                    <div className="pt-6 border-t border-border">
+                        <Button
+                            variant="outline"
+                            className="w-full border-cyan-500/30 text-cyan-600 hover:bg-cyan-500/10 hover:text-cyan-700"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setEmail('demo@artha.com');
+                                setPassword('demo123'); // Preset for easy manual entry if needed
+                                // Trigger login automatically
+                                const fakeEvent = { preventDefault: () => { } } as React.FormEvent;
+                                handleLogin(fakeEvent);
+                            }}
+                        >
+                            <Loader2 className="w-4 h-4 mr-2 text-cyan-500" />
+                            Pitch Mode: Login as Demo User
+                        </Button>
+                        <p className="text-[10px] text-center text-muted-foreground mt-2">
+                            Auto-fills credentials for Investor Demo (demo@artha.com)
+                        </p>
                     </div>
                 </div>
             </div>

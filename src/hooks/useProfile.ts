@@ -19,7 +19,6 @@ export function useProfile() {
     const profileQuery = useQuery({
         queryKey: ['profile'],
         queryFn: profileService.getProfile,
-        enabled: !isDemoUser,
     });
 
     const organizationQuery = useQuery({
@@ -29,7 +28,7 @@ export function useProfile() {
             if (!orgId) throw new Error('No organization ID');
             return profileService.getOrganization(orgId);
         },
-        enabled: !!profileQuery.data?.organization_id && !isDemoUser,
+        enabled: !!profileQuery.data?.organization_id,
     });
 
     const updateProfileMutation = useMutation({
@@ -43,28 +42,11 @@ export function useProfile() {
         },
     });
 
-    const demoOrganization: Organization = {
-        id: 'demo-org-id',
-        name: 'Artha Demo Corp',
-        industry: 'Manufacturing & Heavy Industry',
-        tier: 'enterprise',
-        credits_purchased: 150000,
-        created_at: new Date().toISOString(),
-    };
-
     return {
         user: userQuery.data,
-        profile: isDemoUser ? {
-            id: userQuery.data?.id || 'demo-user-id',
-            email: 'demo@artha.com',
-            full_name: 'Demo Administrator',
-            organization_id: 'demo-org-id',
-            role: 'admin',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        } as Profile : (profileQuery.data || null),
-        organization: isDemoUser ? demoOrganization : (organizationQuery.data || null),
-        isLoading: (!isDemoUser && (profileQuery.isLoading || organizationQuery.isLoading)) || userQuery.isLoading,
+        profile: profileQuery.data || null,
+        organization: organizationQuery.data || null,
+        isLoading: profileQuery.isLoading || organizationQuery.isLoading || userQuery.isLoading,
         updateProfile: updateProfileMutation.mutate,
         isUpdating: updateProfileMutation.isPending,
     };

@@ -171,6 +171,30 @@ export function useSimulation() {
         if (!scenario) return;
         setIsSimulating(true);
 
+        // --- DEMO MODE MOCK ---
+        if (isDemoUser) {
+            setTimeout(() => {
+                const intervention = interventions.find(i => i.id === interventionId);
+                if (!intervention) return;
+
+                // Apply reduction logic mock
+                const newProjections = projections.map(p => ({
+                    ...p,
+                    optimized_value: p.optimized_value * (1 - (intervention.reduction_percentage / 100))
+                }));
+
+                setProjections(newProjections);
+                setInterventions(prev => prev.map(i =>
+                    i.id === interventionId ? { ...i, is_applied: true } : i
+                ));
+
+                toast.success("Simulation Complete", { description: "AI Model updated projections based on new parameters." });
+                setIsSimulating(false);
+            }, 2000); // 2s simulated delay
+            return;
+        }
+
+        // --- REAL BACKEND ---
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Not authenticated");
@@ -198,7 +222,7 @@ export function useSimulation() {
             console.error("Simulation Error:", error);
             toast.error("Simulation Failed", { description: error.message });
         } finally {
-            setIsSimulating(false);
+            if (!isDemoUser) setIsSimulating(false);
         }
     }
 

@@ -71,6 +71,19 @@ export default function Intelligence() {
 
       <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
 
+        {/* COMPLIANCE DISCLAIMER (P0) */}
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-medium text-amber-500">Regulatory Disclaimer (SEBI/CCTS)</h4>
+            <p className="text-sm text-amber-400/80 mt-1">
+              This simulation is a probabilistic model for <strong>Audit Readiness & Risk Analysis only</strong>.
+              It does NOT constitute investment advice, financial recommendations, or a solicitation to buy/sell Carbon Credits.
+              All projections are deterministic scenarios based on user-provided inputs.
+            </p>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

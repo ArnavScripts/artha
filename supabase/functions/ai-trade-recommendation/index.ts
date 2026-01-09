@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
+import { GoogleGenerativeAI } from "npm:@google/generative-ai@^0.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
@@ -13,57 +13,95 @@ serve(async (req) => {
     }
 
     try {
-        const { portfolio_id, market_context } = await req.json();
-
         // 1. Initialize Clients
         const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY") || "");
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
         );
 
-        // 2. Fetch Data (RAG - Retrieval Augmented Generation)
-        // In a real app, we would fetch the actual portfolio and market prices here.
-        // For this demo, we'll simulate the data context.
-        const contextData = {
-            portfolio: {
-                cash_balance: 1500000,
-                holdings: [
-                    { symbol: "CCTS", quantity: 5000, avg_price: 450 }
-                ]
-            },
-            market: {
-                current_price: 580,
-                trend: market_context || "rising",
-                volatility: "medium"
-            }
+        // 2. Fetch LIVE Market Context
+        // Get latest price
+        const { data: ticker } = await supabase
+            .from('market_ticker')
+            .select('*')
+            .order('timestamp', { ascending: false })
+            .limit(1)
+            .single();
+
+        // Get Order Book Snapshot (Top 5 Bids/Asks)
+        const { data: orderBook, error: obError } = await supabase
+            .from('order_book')
+            .select('*')
+            .eq('status', 'open');
+
+        if (obError) {
+            console.error("Database Error (OrderBook):", obError);
+            // Fail gracefully if DB missing
+        }
+
+        const currentPrice = ticker?.price || 580;
+        const volume24h = ticker?.volume || 0;
+
+        // Simple aggregate of order book for the prompt
+        const bids = orderBook?.filter(o => o.type === 'buy') || [];
+        const asks = orderBook?.filter(o => o.type === 'sell') || [];
+        const buyPressure = bids.reduce((acc, b) => acc + b.quantity, 0);
+        const sellPressure = asks.reduce((acc, a) => acc + a.quantity, 0);
+
+        const marketContext = {
+            symbol: "CCTS",
+            current_price: currentPrice,
+            market_sentiment: buyPressure > sellPressure ? "bullish" : "bearish",
+            order_book_imbalance: buyPressure / (sellPressure || 1), // >1 means more buyers
+            volume_24h: volume24h
         };
 
-        // 3. Prompt Engineering
+        // 3. User Portfolio (Sanitized for Privacy/Legal compliance - DPDP Act)
+        // CRITICAL: innovative abstraction layer to prevent leaking raw financials to LLM
+        // Ideally derived from real DB user data, here mocked safely.
+
+        // We do NOT send "1,500,000" cash. We send "SOLVENCY_STATUS".
+        const portfolio = {
+            liquidity_status: "HIGH_LIQUIDITY_TIER_1", // > 10L
+            inventory_status: "HOLDING_ADEQUATE", // > 1000 credits
+            compliance_deadline: "Q4_FY26",
+            liability_gap: "MODERATE"
+        };
+
+        // 4. Prompt Engineering (Refined for CFO/Risk Persona)
         const prompt = `
-      Act as a senior carbon market trader. Analyze the following context and recommend a trade action.
+      Act as the Chief Sustainability Risk Officer (CSRO) for an Indian Enterprise.
       
-      Context:
-      ${JSON.stringify(contextData, null, 2)}
+      MARKET CONTEXT (LIVE):
+      ${JSON.stringify(marketContext, null, 2)}
       
-      Task:
-      Recommend an action (BUY, SELL, or HOLD).
-      Calculate the quantity and price.
-      Provide a brief rationale (max 2 sentences).
+      INTERNAL STATUS (SANITIZED):
+      ${JSON.stringify(portfolio, null, 2)}
       
-      Output Format (JSON only):
+      GOAL:
+      Analyze market conditions to optimize Carbon Liability Management under CCTS trading norms.
+      Do NOT behave like a day trader. Focus on regulatory compliance cost and long-term risk.
+      
+      TASK:
+      Recommend a strategic action:
+      - ACCUMULATE: If prices are favorable and we have a liability gap.
+      - DEFER: If market is overheated and we have time.
+      - HEDGE: If volatility is high.
+      
+      OUTPUT JSON:
       {
-        "action": "BUY|SELL|HOLD",
-        "quantity": number,
-        "price_per_unit": number,
+        "action": "ACCUMULATE|DEFER|HEDGE",
+        "recommended_volume_tier": "Low|Medium|High",
+        "limit_price_suggestion": number,
         "confidence": number (0-100),
-        "rationale": "string"
+        "strategic_rationale": "Brief executive summary for the CFO. Focus on risk/reward."
       }
     `;
 
-        // 4. Generate Insight
+        // 5. Generate Insight
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();

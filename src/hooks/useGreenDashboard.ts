@@ -36,52 +36,94 @@ export function useGreenDashboard() {
     if (isDemoUser) {
         return {
             impact: {
-                trees_planted: 12500,
-                co2_offset: 850,
-                water_saved: 450000,
-                clean_energy: 120,
-                csr_rating: 'A+',
-                media_value: '₹12.5L',
-                certifications: ['Gold Standard', 'Verra Verified']
+                trees_planted: 125000,
+                co2_offset: 45000,
+                water_saved: 2500000,
+                clean_energy: 12500,
+                csr_rating: 'Platinum+',
+                media_value: '₹1.2 Cr',
+                certifications: ['Gold Standard', 'Verra Verified', 'UN SDG Partner', 'ISO 14064']
             } as OrganizationImpact,
             offsetHistory: [
-                { month: 'Jan', offset_value: 45 },
-                { month: 'Feb', offset_value: 52 },
-                { month: 'Mar', offset_value: 48 },
-                { month: 'Apr', offset_value: 65 },
-                { month: 'May', offset_value: 78 },
-                { month: 'Jun', offset_value: 90 },
+                { month: 'Feb', offset_value: 45 },
+                { month: 'Mar', offset_value: 58 },
+                { month: 'Apr', offset_value: 72 },
+                { month: 'May', offset_value: 85 },
+                { month: 'Jun', offset_value: 65 },
+                { month: 'Jul', offset_value: 90 },
+                { month: 'Aug', offset_value: 110 },
+                { month: 'Sep', offset_value: 125 },
+                { month: 'Oct', offset_value: 140 },
+                { month: 'Nov', offset_value: 165 },
+                { month: 'Dec', offset_value: 190 },
+                { month: 'Jan', offset_value: 215 },
             ] as OffsetHistory[],
             verifications: [
                 {
                     project_name: 'Sundarbans Mangrove Restoration',
                     status: 'verified',
-                    vintage: '2023',
+                    vintage: '2025',
                     auditor: 'DNV GL',
-                    credits: 5000,
-                    last_audit: '2024-01-15'
+                    credits: 15000,
+                    last_audit: '2025-12-15'
                 },
                 {
-                    project_name: 'Rajasthan Solar Park',
-                    status: 'pending',
-                    vintage: '2024',
+                    project_name: 'Thar Desert Solar Park',
+                    status: 'verified',
+                    vintage: '2025',
                     auditor: 'TUV Nord',
+                    credits: 25000,
+                    last_audit: '2026-01-02'
+                },
+                {
+                    project_name: 'Himalayan Hydro Project',
+                    status: 'in_review',
+                    vintage: '2026',
+                    auditor: 'Bureau Veritas',
+                    credits: 8500,
+                    last_audit: 'Under Review'
+                },
+                {
+                    project_name: 'Kerala Wind Farm Expansion',
+                    status: 'pending',
+                    vintage: '2026',
+                    auditor: 'SGS',
                     credits: 12000,
-                    last_audit: 'Pending'
+                    last_audit: 'Scheduled: Feb 20, 2026'
+                },
+                {
+                    project_name: 'Urban Afforestation (Mumbai)',
+                    status: 'pending',
+                    vintage: '2026',
+                    auditor: 'EarthCheck',
+                    credits: 3500,
+                    last_audit: 'Documentation Pending'
                 }
             ] as ProjectVerification[],
             registry: [
                 {
                     registry_name: 'Verra',
                     status: 'synced',
-                    last_sync: '2024-03-15T10:00:00Z',
-                    credits: 15000
+                    last_sync: '2026-01-04T08:30:00Z',
+                    credits: 32000
                 },
                 {
                     registry_name: 'Gold Standard',
                     status: 'synced',
-                    last_sync: '2024-03-14T15:30:00Z',
-                    credits: 8500
+                    last_sync: '2026-01-04T09:15:00Z',
+                    credits: 18500
+                },
+                {
+                    registry_name: 'Global Carbon Council',
+                    status: 'synced',
+                    last_sync: '2026-01-03T16:00:00Z',
+                    credits: 9500
+                },
+                {
+                    registry_name: 'Indian Carbon Registry',
+                    status: 'pending',
+                    last_sync: null,
+                    credits: 2060
                 }
             ] as RegistryReconciliation[],
             isLoading: false

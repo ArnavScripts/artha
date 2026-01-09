@@ -32,6 +32,7 @@ const Intelligence = lazy(() => import("./pages/Intelligence"));
 const GreenVerification = lazy(() => import("./pages/GreenVerification"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Wallet = lazy(() => import("./pages/Wallet"));
+const AuditorDashboard = lazy(() => import("./pages/AuditorDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,8 @@ function PageLoader() {
   return <GlobalLoader />;
 }
 
+import { CinematicTransition } from "@/components/shared/CinematicTransition";
+
 const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -49,9 +52,9 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<CinematicTransition><LandingPage /></CinematicTransition>} />
+        <Route path="/login" element={<CinematicTransition><Login /></CinematicTransition>} />
+        <Route path="/register" element={<CinematicTransition><Register /></CinematicTransition>} />
 
         {/* Protected Routes */}
         <Route
@@ -59,27 +62,34 @@ const AnimatedRoutes = () => {
           element={
             <AuthGuard>
               <MainLayout>
-                <Routes>
-                  {/* Carbon Mode Routes */}
-                  <Route path="/dashboard" element={<CarbonDashboard />} />
-                  <Route path="/emissions" element={<EmissionsTracker />} />
-                  <Route path="/market" element={<CarbonMarket />} />
-                  <Route path="/compliance" element={<ComplianceReports />} />
-                  <Route path="/regulatory" element={<RegulatoryHub />} />
-                  <Route path="/intelligence" element={<Intelligence />} />
+                <Routes location={location}>
+                  {/* CCTS Compliance Stream (Mandatory) */}
+                  <Route path="/compliance/dashboard" element={<CinematicTransition><CarbonDashboard /></CinematicTransition>} />
+                  <Route path="/compliance/emissions" element={<CinematicTransition><EmissionsTracker /></CinematicTransition>} />
+                  <Route path="/compliance/market" element={<CinematicTransition><CarbonMarket /></CinematicTransition>} />
+                  <Route path="/compliance/reports" element={<CinematicTransition><ComplianceReports /></CinematicTransition>} />
+                  <Route path="/compliance/registry" element={<CinematicTransition><RegulatoryHub /></CinematicTransition>} />
+                  <Route path="/compliance/intelligence" element={<CinematicTransition><Intelligence /></CinematicTransition>} />
 
-                  {/* Green Mode Routes */}
-                  <Route path="/green" element={<GreenDashboard />} />
-                  <Route path="/green/marketplace" element={<GreenMarketplace />} />
-                  <Route path="/green/portfolio" element={<GreenPortfolio />} />
-                  <Route path="/green/verification" element={<GreenVerification />} />
+                  {/* GCP Voluntary Stream (Green Credit Programme) */}
+                  <Route path="/voluntary/dashboard" element={<CinematicTransition><GreenDashboard /></CinematicTransition>} />
+                  <Route path="/voluntary/market" element={<CinematicTransition><GreenMarketplace /></CinematicTransition>} />
+                  <Route path="/voluntary/portfolio" element={<CinematicTransition><GreenPortfolio /></CinematicTransition>} />
+                  <Route path="/voluntary/verification" element={<CinematicTransition><GreenVerification /></CinematicTransition>} />
 
-                  {/* Settings */}
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/wallet" element={<Wallet />} />
+                  {/* Shared Settings & Wallet */}
+                  <Route path="/settings" element={<CinematicTransition><Settings /></CinematicTransition>} />
+                  <Route path="/wallet" element={<CinematicTransition><Wallet /></CinematicTransition>} />
 
-                  {/* Catch-all for protected: redirect to dashboard */}
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  {/* Auditor Portal */}
+                  <Route path="/auditor/dashboard" element={<CinematicTransition><AuditorDashboard /></CinematicTransition>} />
+
+                  {/* Redirects for legacy routes */}
+                  <Route path="/dashboard" element={<Navigate to="/compliance/dashboard" replace />} />
+                  <Route path="/green" element={<Navigate to="/voluntary/dashboard" replace />} />
+
+                  {/* Catch-all: Default to Compliance Dashboard */}
+                  <Route path="*" element={<Navigate to="/compliance/dashboard" replace />} />
                 </Routes>
               </MainLayout>
             </AuthGuard>
